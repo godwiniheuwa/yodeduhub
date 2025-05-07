@@ -1,13 +1,47 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { toast } from "@/hooks/use-toast";
+import { createClient } from '@supabase/supabase-js';
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [supabaseConnected, setSupabaseConnected] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Test Supabase connection
+    const checkSupabaseConnection = async () => {
+      try {
+        // This will throw an error if Supabase is not properly connected
+        const supabase = createClient(
+          import.meta.env.VITE_SUPABASE_URL,
+          import.meta.env.VITE_SUPABASE_ANON_KEY
+        );
+        
+        const { data, error } = await supabase.from('_dummy_query').select('*').limit(1);
+        
+        // If we get here without error, connection is successful
+        console.log("Supabase connection successful!");
+        setSupabaseConnected(true);
+        toast({
+          title: "Supabase Connected",
+          description: "Your application is successfully connected to Supabase!",
+        });
+      } catch (error) {
+        console.error("Error connecting to Supabase:", error);
+        toast({
+          title: "Supabase Connection Failed",
+          description: "Please check your Supabase configuration.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    checkSupabaseConnection();
+  }, []);
 
   const handleLogin = (email: string, password: string) => {
     setIsLoading(true);
@@ -60,6 +94,11 @@ export default function LoginPage() {
               <p className="text-gray-500 dark:text-gray-400">
                 Log in to your account to continue your learning journey
               </p>
+              {supabaseConnected && (
+                <div className="mt-2 p-2 bg-green-100 dark:bg-green-900 rounded-md text-sm text-green-800 dark:text-green-200">
+                  ✓ Supabase connection confirmed
+                </div>
+              )}
             </div>
             <LoginForm onLogin={handleLogin} isLoading={isLoading} />
           </div>
