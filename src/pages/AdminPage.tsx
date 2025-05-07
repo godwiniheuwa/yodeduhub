@@ -8,6 +8,7 @@ import { QuickActions } from "@/components/admin/QuickActions";
 import { toast } from "@/hooks/use-toast";
 import { mockQuizzes } from "@/utils/mockData";
 import { supabase } from "@/services/supabase";
+import { getDashboardStats } from "@/services/supabase/database";
 
 export default function AdminPage() {
   const [user, setUser] = useState<any>(null);
@@ -54,22 +55,18 @@ export default function AdminPage() {
   
   const fetchStats = async () => {
     try {
-      // In a real app, this would fetch from your database
-      // For now, we'll use mock data
+      // Use the getDashboardStats function from database.ts
+      const dashboardStats = await getDashboardStats();
+      setStats(dashboardStats);
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+      // Fallback to mock data if there's an error
       setStats({
         totalExams: 5,
         totalYears: 12,
         totalStudents: 1245,
         totalCompletions: 5362
       });
-      
-      // You could use Supabase like this:
-      // const { data: exams, error: examsError } = await supabase
-      //   .from('exams').select('id');
-      // if (!examsError) setStats(prev => ({ ...prev, totalExams: exams.length }));
-      
-    } catch (error) {
-      console.error("Error fetching stats:", error);
     }
   };
 
