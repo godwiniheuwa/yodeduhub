@@ -19,6 +19,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { getQuestions, addQuestion } from '@/services/supabase/exam';
