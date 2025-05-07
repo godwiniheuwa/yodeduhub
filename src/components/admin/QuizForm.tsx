@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Progress } from "@/components/ui/progress";
 
 type QuizFormProps = {
   onSubmit: (quizData: any) => void;
@@ -19,6 +21,11 @@ export function QuizForm({ onSubmit, isLoading = false, initialData }: QuizFormP
   const [description, setDescription] = useState(initialData?.description || "");
   const [timeLimit, setTimeLimit] = useState(initialData?.timeLimit || 30);
   const [category, setCategory] = useState(initialData?.category || "general");
+  const [showCsvDialog, setShowCsvDialog] = useState(false);
+  const [csvData, setCsvData] = useState<any[]>([]);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [importProgress, setImportProgress] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [errors, setErrors] = useState<{
     title?: string;
     description?: string;
@@ -80,6 +87,97 @@ export function QuizForm({ onSubmit, isLoading = false, initialData }: QuizFormP
         variant: "destructive",
       });
     }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCsvFile(file);
+  };
+
+  const parseCsv = (csvText: string) => {
+    // Simple CSV parser
+    const lines = csvText.split("\n").filter(line => line.trim() !== "");
+    const headers = lines[0].split(",").map(h => h.trim());
+    
+    const parsedData = [];
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i];
+      const values = line.split(",").map(v => v.trim());
+      
+      if (values.length === headers.length) {
+        const row: Record<string, string> = {};
+        headers.forEach((header, index) => {
+          row[header] = values[index];
+        });
+        parsedData.push(row);
+      }
+    }
+    
+    return parsedData;
+  };
+
+  const handleImportCsv = () => {
+    if (!csvFile) {
+      toast({
+        title: "No file selected",
+        description: "Please select a CSV file to import.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        // Show progress
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+          progress += 10;
+          setImportProgress(progress);
+          if (progress >= 100) {
+            clearInterval(progressInterval);
+          }
+        }, 100);
+
+        const csvText = event.target?.result as string;
+        const parsedData = parseCsv(csvText);
+        
+        // Validate CSV format
+        if (parsedData.length === 0) {
+          throw new Error("No valid data found in CSV file");
+        }
+        
+        // Check for required columns
+        const requiredColumns = ['question', 'option1', 'option2', 'option3', 'option4', 'answer'];
+        const headers = Object.keys(parsedData[0]);
+        
+        const missingColumns = requiredColumns.filter(col => !headers.includes(col));
+        
+        if (missingColumns.length > 0) {
+          throw new Error(`Missing required columns: ${missingColumns.join(', ')}`);
+        }
+        
+        setCsvData(parsedData);
+        
+        toast({
+          title: "CSV imported successfully",
+          description: `${parsedData.length} questions imported.`,
+        });
+        
+        setShowCsvDialog(false);
+        
+      } catch (error: any) {
+        toast({
+          title: "Import error",
+          description: error.message || "Failed to parse CSV file",
+          variant: "destructive",
+        });
+        setImportProgress(0);
+      }
+    };
+    
+    reader.readAsText(csvFile);
   };
 
   return (
@@ -157,6 +255,62 @@ export function QuizForm({ onSubmit, isLoading = false, initialData }: QuizFormP
               </Select>
             </div>
           </div>
+
+          {/* CSV Import Dialog */}
+          <Dialog open={showCsvDialog} onOpenChange={setShowCsvDialog}>
+            <DialogTrigger asChild>
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full"
+                onClick={() => setShowCsvDialog(true)}
+              >
+                Import Questions from CSV
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Import Questions from CSV</DialogTitle>
+                <DialogDescription>
+                  Upload a CSV file with questions and answers. The CSV should have columns: question, option1, option2, option3, option4, answer
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="csvFile">Select CSV file</Label>
+                  <Input
+                    id="csvFile"
+                    type="file"
+                    accept=".csv"
+                    onChange={handleFileChange}
+                    ref={fileInputRef}
+                  />
+                </div>
+                
+                {importProgress > 0 && importProgress < 100 && (
+                  <div className="space-y-2">
+                    <div className="text-sm">Importing...</div>
+                    <Progress value={importProgress} className="h-2" />
+                  </div>
+                )}
+
+                <div className="bg-gray-50 dark:bg-gray-900 p-3 rounded-md text-xs">
+                  <p className="font-medium mb-2">CSV Format Example:</p>
+                  <pre className="overflow-x-auto">
+                    question,option1,option2,option3,option4,answer,type<br/>
+                    "What is the capital of France?","London","Paris","Berlin","Madrid","Paris","multiple-choice"<br/>
+                    "Select all prime numbers:","2","4","7","9","2,7","multi-select"
+                  </pre>
+                </div>
+              </div>
+              
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowCsvDialog(false)}>Cancel</Button>
+                <Button onClick={handleImportCsv}>Import</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </CardContent>
         
         <CardFooter className="flex justify-between">

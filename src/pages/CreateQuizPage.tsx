@@ -35,30 +35,26 @@ export default function CreateQuizPage() {
   const handleCreateQuiz = (quizData: any) => {
     setIsLoading(true);
     
-    // Mock API call to create quiz
-    setTimeout(() => {
-      // Generate a new quiz object with ID
-      const newQuiz = {
-        ...quizData,
-        id: `quiz-${Date.now()}`,
-        questionsCount: 0,
-        createdAt: new Date().toISOString(),
-        attempts: 0,
-        averageScore: null,
-      };
-      
-      // In a real app, this would be an API call
-      // For now, we'll just modify the mock data in memory
-      // mockQuizzes.push(newQuiz);
-      
-      toast({
-        title: "Quiz created",
-        description: "Your quiz has been successfully created. You can now add questions.",
-      });
-      
-      navigate("/admin");
-      setIsLoading(false);
-    }, 1000);
+    // Generate a new quiz object with ID
+    const newQuiz = {
+      ...quizData,
+      id: `quiz-${Date.now()}`,
+      questionsCount: 0,
+      createdAt: new Date().toISOString(),
+      attempts: 0,
+      averageScore: null,
+    };
+    
+    // Add to mockQuizzes array (in a real app, this would be an API call)
+    mockQuizzes.push(newQuiz);
+    
+    toast({
+      title: "Quiz created",
+      description: "Your quiz has been successfully created. You can now add questions.",
+    });
+    
+    navigate("/admin");
+    setIsLoading(false);
   };
 
   return (
