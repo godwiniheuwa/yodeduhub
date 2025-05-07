@@ -13,5 +13,5 @@ export {
 export * from './quiz';
 export * from './exam';
 
-// Re-export everything from user module (this contains the getCurrentUser, getUserPreferences, etc.)
+// Re-export everything from user module (this now re-exports from multiple files)
 export * from './user';
