@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AdminLayout } from "@/components/layout/AdminLayout";
@@ -20,6 +19,7 @@ import {
   Calendar, 
   Users, 
   Award,
+  BookOpen,
   Plus
 } from "lucide-react";
 import { mockQuizzes } from "@/utils/mockData";
@@ -126,6 +126,7 @@ export default function AdminPage() {
             <StatCard 
               title="Exam Years" 
               value={stats.totalYears}
+              trend={{ value: 8, isPositive: true }}
               icon={<Calendar className="text-green-500" />}
             />
             <StatCard 
@@ -237,7 +238,7 @@ export default function AdminPage() {
             
             <Card className="p-4 hover:shadow-md transition-shadow">
               <div className="flex flex-col items-center text-center">
-                <Category className="h-8 w-8 text-purple-500 mb-2" />
+                <BookOpen className="h-8 w-8 text-purple-500 mb-2" />
                 <h3 className="font-medium mb-1">Manage Subjects</h3>
                 <p className="text-sm text-gray-500 mb-4">Add or edit subjects like Mathematics, English</p>
                 <Button 

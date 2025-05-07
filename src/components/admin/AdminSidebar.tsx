@@ -12,7 +12,7 @@ import {
   SidebarMenuItem,
   SidebarProvider
 } from "@/components/ui/sidebar";
-import { Book, Calendar, Category, Grid2x2, Users, Award } from "lucide-react";
+import { Book, Calendar, BookOpen, Grid2x2, Users, Award } from "lucide-react";
 
 export function AdminSidebar() {
   const location = useLocation();
@@ -40,7 +40,7 @@ export function AdminSidebar() {
     {
       title: "Subjects",
       path: "/admin/subjects",
-      icon: Category
+      icon: BookOpen
     },
     {
       title: "Students",
