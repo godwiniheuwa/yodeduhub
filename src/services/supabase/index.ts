@@ -1,9 +1,17 @@
 
-// Re-export everything for easier imports
+// Re-export client and types
 export * from './client';
 export * from './types';
-export * from './database';
+
+// Re-export functions from database.ts but exclude the ones that conflict with user.ts
+export { 
+  setupDatabase,
+  getDashboardStats
+} from './database';
+
+// Re-export everything from quiz and exam modules
 export * from './quiz';
 export * from './exam';
-export * from './user';
 
+// Re-export everything from user module (this contains the getCurrentUser, getUserPreferences, etc.)
+export * from './user';
