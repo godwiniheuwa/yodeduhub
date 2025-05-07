@@ -3,11 +3,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { QuizForm } from "@/components/admin/QuizForm";
+import { QuizImport } from "@/components/admin/QuizImport";
+import { createQuiz } from "@/services/supabaseClient";
 import { toast } from "@/hooks/use-toast";
-import { mockQuizzes } from "@/utils/mockData";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function CreateQuizPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [importedQuestions, setImportedQuestions] = useState<any[]>([]);
   const navigate = useNavigate();
 
   // Check if user is logged in and is an admin
@@ -32,29 +35,54 @@ export default function CreateQuizPage() {
     navigate("/login");
   };
 
-  const handleCreateQuiz = (quizData: any) => {
+  const handleCreateQuiz = async (quizData: any) => {
     setIsLoading(true);
     
-    // Generate a new quiz object with ID
-    const newQuiz = {
-      ...quizData,
-      id: `quiz-${Date.now()}`,
-      questionsCount: 0,
-      createdAt: new Date().toISOString(),
-      attempts: 0,
-      averageScore: null,
-    };
-    
-    // Add to mockQuizzes array (in a real app, this would be an API call)
-    mockQuizzes.push(newQuiz);
-    
+    try {
+      // Save quiz to Supabase
+      const newQuiz = await createQuiz({
+        title: quizData.title,
+        description: quizData.description,
+        category: quizData.category,
+        timeLimit: quizData.timeLimit,
+        createdAt: new Date().toISOString(),
+      });
+      
+      if (newQuiz) {
+        toast({
+          title: "Quiz created",
+          description: `"${newQuiz.title}" has been successfully created. ${importedQuestions.length > 0 ? 'Imported questions will be added.' : 'You can now add questions.'}`,
+        });
+        
+        // If we have imported questions, navigate to the questions page to add them
+        if (importedQuestions.length > 0) {
+          navigate(`/admin/quiz/${newQuiz.id}/questions`, {
+            state: { importedQuestions: importedQuestions }
+          });
+        } else {
+          navigate("/admin");
+        }
+      } else {
+        throw new Error('Failed to create quiz');
+      }
+    } catch (error) {
+      console.error('Error creating quiz:', error);
+      toast({
+        title: "Error",
+        description: "There was an error creating your quiz. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleImportSuccess = (questions: any[]) => {
+    setImportedQuestions(questions);
     toast({
-      title: "Quiz created",
-      description: "Your quiz has been successfully created. You can now add questions.",
+      title: "Questions imported",
+      description: `${questions.length} questions ready to be added to your quiz.`,
     });
-    
-    navigate("/admin");
-    setIsLoading(false);
   };
 
   return (
@@ -72,7 +100,44 @@ export default function CreateQuizPage() {
           </p>
         </div>
         
-        <QuizForm onSubmit={handleCreateQuiz} isLoading={isLoading} />
+        <Tabs defaultValue="manual" className="mb-8">
+          <TabsList className="grid grid-cols-2 mb-4">
+            <TabsTrigger value="manual">Create Quiz</TabsTrigger>
+            <TabsTrigger value="import">Import Questions</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="manual">
+            {importedQuestions.length > 0 && (
+              <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-md mb-6 border border-green-200 dark:border-green-800">
+                <p className="text-green-800 dark:text-green-300 font-medium">
+                  {importedQuestions.length} questions imported
+                </p>
+                <p className="text-sm text-green-700 dark:text-green-400">
+                  Complete the quiz details below and submit to add these questions.
+                </p>
+              </div>
+            )}
+            <QuizForm onSubmit={handleCreateQuiz} isLoading={isLoading} />
+          </TabsContent>
+          
+          <TabsContent value="import">
+            <QuizImport onImportSuccess={handleImportSuccess} />
+            
+            {importedQuestions.length > 0 && (
+              <div className="mt-6">
+                <p className="text-center mb-4">
+                  {importedQuestions.length} questions successfully imported. Now fill out the quiz details.
+                </p>
+                <button
+                  onClick={() => document.querySelector('[data-value="manual"]')?.click()}
+                  className="w-full py-2 bg-green-600 hover:bg-green-700 text-white rounded-md"
+                >
+                  Continue to Quiz Details
+                </button>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );
