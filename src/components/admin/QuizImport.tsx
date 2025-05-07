@@ -11,6 +11,18 @@ interface QuizImportProps {
   onImportSuccess: (questions: any[]) => void;
 }
 
+interface CsvQuestionRow {
+  question: string;
+  options: string;
+  correct_answer: string;
+  question_type: string;
+  points: string;
+  image_url?: string;
+  audio_url?: string;
+  video_url?: string;
+  [key: string]: string | undefined;
+}
+
 export function QuizImport({ onImportSuccess }: QuizImportProps) {
   const [file, setFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
@@ -46,7 +58,7 @@ export function QuizImport({ onImportSuccess }: QuizImportProps) {
 
           // Validate CSV structure
           const requiredColumns = ['question', 'options', 'correct_answer', 'question_type', 'points'];
-          const firstRow = data[0];
+          const firstRow = data[0] as CsvQuestionRow | undefined;
           
           if (!firstRow || requiredColumns.some(col => !(col in firstRow))) {
             setError('Invalid CSV format. The file must include columns: question, options, correct_answer, question_type, and points');
@@ -55,7 +67,7 @@ export function QuizImport({ onImportSuccess }: QuizImportProps) {
           }
 
           // Process questions
-          const processedQuestions = data
+          const processedQuestions = (data as CsvQuestionRow[])
             .filter(row => row.question && row.question.trim() !== '')
             .map((row, index) => {
               // Parse options from comma-separated string to array

@@ -129,7 +129,12 @@ export default function CreateQuizPage() {
                   {importedQuestions.length} questions successfully imported. Now fill out the quiz details.
                 </p>
                 <button
-                  onClick={() => document.querySelector('[data-value="manual"]')?.click()}
+                  onClick={() => {
+                    const element = document.querySelector('[data-value="manual"]');
+                    if (element instanceof HTMLElement) {
+                      element.click();
+                    }
+                  }}
                   className="w-full py-2 bg-green-600 hover:bg-green-700 text-white rounded-md"
                 >
                   Continue to Quiz Details
