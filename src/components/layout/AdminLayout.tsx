@@ -1,4 +1,3 @@
-
 import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
@@ -43,7 +42,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <div className="flex justify-between items-center p-4 border-b bg-white dark:bg-gray-800">
             <div className="flex items-center">
               <SidebarTrigger />
-              <h1 className="ml-4 text-lg font-medium">YodeduHub Admin</h1>
+              <h1 className="ml-4 text-lg font-medium">YODEDUHUB Admin</h1>
             </div>
             <div className="flex items-center gap-4">
               <DropdownMenu>

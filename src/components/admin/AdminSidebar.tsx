@@ -57,7 +57,7 @@ export function AdminSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="flex flex-col items-center py-4">
-        <h2 className="text-xl font-bold">YodeduHub Admin</h2>
+        <h2 className="text-xl font-bold">YODEDUHUB Admin</h2>
         <p className="text-sm text-muted-foreground">Exam Management System</p>
       </SidebarHeader>
       

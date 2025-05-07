@@ -32,10 +32,10 @@ export function Header({
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <Link to="/" className="flex items-center space-x-2">
           <div className="w-8 h-8 rounded-full bg-gradient-to-r from-quiz-primary to-quiz-secondary flex items-center justify-center">
-            <span className="text-white font-bold">Q</span>
+            <span className="text-white font-bold">Y</span>
           </div>
           <span className="text-xl font-bold text-quiz-dark dark:text-white">
-            QwikTest
+            YODEDUHUB
           </span>
         </Link>
 

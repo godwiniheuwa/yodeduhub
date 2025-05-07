@@ -16,7 +16,7 @@ export default function SignupPage() {
     setTimeout(() => {
       toast({
         title: "Account created",
-        description: `Welcome to QwikTest, ${name}!`,
+        description: `Welcome to YODEDUHUB, ${name}!`,
       });
       
       // Store user data in localStorage
@@ -45,7 +45,7 @@ export default function SignupPage() {
             <div>
               <h1 className="text-3xl font-bold mb-2">Create an Account</h1>
               <p className="text-gray-500 dark:text-gray-400">
-                Join QwikTest to start learning or create assessments
+                Join YODEDUHUB to start learning or create assessments
               </p>
             </div>
             <SignupForm onSignup={handleSignup} isLoading={isLoading} />
@@ -61,7 +61,7 @@ export default function SignupPage() {
             </div>
             
             <div className="mt-8 bg-quiz-light dark:bg-gray-800 rounded-lg p-6">
-              <h3 className="text-xl font-semibold mb-2">Why Join QwikTest?</h3>
+              <h3 className="text-xl font-semibold mb-2">Why Join YODEDUHUB?</h3>
               <ul className="space-y-2 list-disc list-inside text-gray-700 dark:text-gray-300">
                 <li>Access thousands of quizzes across various subjects</li>
                 <li>Track your learning progress over time</li>

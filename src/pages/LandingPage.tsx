@@ -18,7 +18,7 @@ export default function LandingPage() {
                 Learn Faster with Interactive Quizzes
               </h1>
               <p className="text-gray-500 dark:text-gray-400 md:text-xl">
-                QwikTest helps students master any subject through engaging quizzes and detailed analytics. 
+                YODEDUHUB helps students master any subject through engaging quizzes and detailed analytics. 
                 Teachers can create custom assessments in minutes.
               </p>
               <div className="flex flex-col gap-3 min-[400px]:flex-row">
@@ -112,7 +112,7 @@ export default function LandingPage() {
           <div className="max-w-2xl mx-auto space-y-6">
             <h2 className="text-3xl font-bold text-white">Ready to Start Learning?</h2>
             <p className="text-white/80 md:text-lg">
-              Join thousands of students and educators who are already using QwikTest to enhance their learning experience.
+              Join thousands of students and educators who are already using YODEDUHUB to enhance their learning experience.
             </p>
             <div className="flex flex-col gap-3 min-[400px]:flex-row justify-center">
               <Link to="/signup">

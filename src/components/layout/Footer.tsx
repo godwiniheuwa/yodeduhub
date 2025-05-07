@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 
 export function Footer() {
@@ -11,10 +10,10 @@ export function Footer() {
           <div>
             <Link to="/" className="flex items-center space-x-2">
               <div className="w-8 h-8 rounded-full bg-gradient-to-r from-quiz-primary to-quiz-secondary flex items-center justify-center">
-                <span className="text-white font-bold">Q</span>
+                <span className="text-white font-bold">Y</span>
               </div>
               <span className="text-lg font-bold text-quiz-dark dark:text-white">
-                QwikTest
+                YODEDUHUB
               </span>
             </Link>
             <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
@@ -67,7 +66,7 @@ export function Footer() {
         
         <div className="border-t border-gray-200 dark:border-gray-800 mt-8 pt-6">
           <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-            © {currentYear} QwikTest. All rights reserved.
+            © {currentYear} YODEDUHUB. All rights reserved.
           </p>
         </div>
       </div>
