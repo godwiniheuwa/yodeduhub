@@ -43,7 +43,7 @@ export default function LoginPage() {
             setDatabaseReady(true);
             toast({
               title: "Database Ready",
-              description: "Quiz tables have been created successfully!",
+              description: "Exam tables have been created successfully!",
             });
           } else {
             toast({

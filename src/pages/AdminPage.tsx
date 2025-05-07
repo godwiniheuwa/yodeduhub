@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Layout } from "@/components/layout/Layout";
+import { AdminLayout } from "@/components/layout/AdminLayout";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
@@ -14,11 +14,26 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { mockQuizzes, mockAdminStats } from "@/utils/mockData";
+import { Card } from "@/components/ui/card";
+import { 
+  Book, 
+  Calendar, 
+  Users, 
+  Award,
+  Plus
+} from "lucide-react";
+import { mockQuizzes } from "@/utils/mockData";
+import { supabase } from "@/services/supabaseClient";
 
 export default function AdminPage() {
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalExams: 0,
+    totalYears: 0,
+    totalStudents: 0,
+    totalCompletions: 0
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -46,114 +61,113 @@ export default function AdminPage() {
     }
     
     setUser(parsedUser);
+    
+    // Fetch stats
+    fetchStats();
+    
     setIsLoading(false);
   }, [navigate]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out",
-    });
-    navigate("/login");
-  };
-
-  const handleCreateNewQuiz = () => {
-    // Navigate to the create quiz page
-    navigate("/admin/quiz/new");
+  
+  const fetchStats = async () => {
+    try {
+      // In a real app, this would fetch from your database
+      // For now, we'll use mock data
+      setStats({
+        totalExams: 5,
+        totalYears: 12,
+        totalStudents: 1245,
+        totalCompletions: 5362
+      });
+      
+      // You could use Supabase like this:
+      // const { data: exams, error: examsError } = await supabase
+      //   .from('exams').select('id');
+      // if (!examsError) setStats(prev => ({ ...prev, totalExams: exams.length }));
+      
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    }
   };
 
   if (isLoading) {
     return (
-      <Layout>
-        <div className="container mx-auto py-8 px-4">
-          <div className="h-screen flex items-center justify-center">
-            <div className="text-center">
-              <p className="text-xl">Loading...</p>
-            </div>
+      <AdminLayout>
+        <div className="h-screen flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-xl">Loading...</p>
           </div>
         </div>
-      </Layout>
+      </AdminLayout>
     );
   }
   
   if (!user) return null;
 
   return (
-    <Layout 
-      isLoggedIn={true} 
-      userRole={user.role} 
-      userInitials={user.name.charAt(0)}
-      onLogout={handleLogout}
-    >
-      <div className="container mx-auto py-8 px-4">
-        <header className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">
-              YodeduHub Admin
-            </h1>
-            <p className="text-gray-500 dark:text-gray-400">
-              UNESCO Youth Orientation for Development
-            </p>
-          </div>
-          <Button 
-            className="button-quiz-primary"
-            onClick={handleCreateNewQuiz}
-          >
-            Create New Quiz
-          </Button>
+    <AdminLayout>
+      <div>
+        <header className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">
+            Dashboard Overview
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400">
+            View and manage your exam system
+          </p>
         </header>
         
         {/* Admin Statistics */}
         <section className="mb-10">
-          <h2 className="text-xl font-semibold mb-6">Platform Statistics</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <StatCard 
-              title="Total Quizzes" 
-              value={mockAdminStats.totalQuizzes} 
+              title="Total Exams" 
+              value={stats.totalExams}
+              icon={<Book className="text-blue-500" />}
             />
             <StatCard 
-              title="Total Questions" 
-              value={mockAdminStats.totalQuestions}
+              title="Exam Years" 
+              value={stats.totalYears}
+              icon={<Calendar className="text-green-500" />}
             />
             <StatCard 
-              title="Active Users" 
-              value={mockAdminStats.activeUsers}
+              title="Registered Students" 
+              value={stats.totalStudents}
               trend={{ value: 8, isPositive: true }}
+              icon={<Users className="text-purple-500" />}
             />
             <StatCard 
               title="Quiz Completions" 
-              value={mockAdminStats.quizCompletions}
+              value={stats.totalCompletions}
               trend={{ value: 12, isPositive: true }}
+              icon={<Award className="text-amber-500" />}
             />
           </div>
         </section>
         
-        {/* Quiz Management */}
-        <section>
+        {/* Recent Exams */}
+        <section className="mb-8">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Quiz Management</h2>
+            <h2 className="text-xl font-semibold">Recent Exams</h2>
             <div className="flex space-x-2">
-              <Button variant="outline" className="text-sm">
-                Export Data
-              </Button>
-              <Button variant="outline" className="text-sm">
-                Filter
+              <Button 
+                onClick={() => navigate('/admin/exams/new')}
+                className="bg-quiz-primary hover:bg-purple-700"
+              >
+                <Plus className="mr-1 h-4 w-4" /> Add Exam
               </Button>
             </div>
           </div>
           
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <Table>
-              <TableCaption>A list of your quizzes.</TableCaption>
+              <TableCaption>A list of your recent exams</TableCaption>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[250px]">Quiz Title</TableHead>
-                  <TableHead>Category</TableHead>
+                  <TableHead className="w-[250px]">Exam Name</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Years</TableHead>
+                  <TableHead>Subjects</TableHead>
                   <TableHead>Questions</TableHead>
-                  <TableHead>Time Limit</TableHead>
                   <TableHead>Attempts</TableHead>
-                  <TableHead>Avg. Score</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -162,18 +176,18 @@ export default function AdminPage() {
                   <TableRow key={quiz.id}>
                     <TableCell className="font-medium">{quiz.title}</TableCell>
                     <TableCell>{quiz.category}</TableCell>
+                    <TableCell>2018-2024</TableCell>
+                    <TableCell>Mathematics, English</TableCell>
                     <TableCell>{quiz.questionsCount}</TableCell>
-                    <TableCell>{quiz.timeLimit} min</TableCell>
                     <TableCell>{quiz.attempts || 0}</TableCell>
-                    <TableCell>{quiz.averageScore || '-'}%</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
-                        <Link to={`/admin/quiz/${quiz.id}/edit`}>
+                        <Link to={`/admin/exams/${quiz.id}/edit`}>
                           <Button variant="outline" size="sm">
                             Edit
                           </Button>
                         </Link>
-                        <Link to={`/admin/quiz/${quiz.id}/questions`}>
+                        <Link to={`/admin/exams/${quiz.id}/questions`}>
                           <Button variant="outline" size="sm">
                             Questions
                           </Button>
@@ -186,7 +200,58 @@ export default function AdminPage() {
             </Table>
           </div>
         </section>
+        
+        {/* Quick Actions */}
+        <section>
+          <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="p-4 hover:shadow-md transition-shadow">
+              <div className="flex flex-col items-center text-center">
+                <Book className="h-8 w-8 text-blue-500 mb-2" />
+                <h3 className="font-medium mb-1">Manage Exams</h3>
+                <p className="text-sm text-gray-500 mb-4">Add or edit exams like JAMB, WAEC, IELTS</p>
+                <Button 
+                  onClick={() => navigate('/admin/exams')}
+                  variant="outline" 
+                  className="w-full"
+                >
+                  Go to Exams
+                </Button>
+              </div>
+            </Card>
+            
+            <Card className="p-4 hover:shadow-md transition-shadow">
+              <div className="flex flex-col items-center text-center">
+                <Calendar className="h-8 w-8 text-green-500 mb-2" />
+                <h3 className="font-medium mb-1">Manage Years</h3>
+                <p className="text-sm text-gray-500 mb-4">Add or edit exam years from 2000 onwards</p>
+                <Button 
+                  onClick={() => navigate('/admin/years')}
+                  variant="outline" 
+                  className="w-full"
+                >
+                  Go to Years
+                </Button>
+              </div>
+            </Card>
+            
+            <Card className="p-4 hover:shadow-md transition-shadow">
+              <div className="flex flex-col items-center text-center">
+                <Category className="h-8 w-8 text-purple-500 mb-2" />
+                <h3 className="font-medium mb-1">Manage Subjects</h3>
+                <p className="text-sm text-gray-500 mb-4">Add or edit subjects like Mathematics, English</p>
+                <Button 
+                  onClick={() => navigate('/admin/subjects')}
+                  variant="outline" 
+                  className="w-full"
+                >
+                  Go to Subjects
+                </Button>
+              </div>
+            </Card>
+          </div>
+        </section>
       </div>
-    </Layout>
+    </AdminLayout>
   );
 }
