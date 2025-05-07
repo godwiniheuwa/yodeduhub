@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AdminLayout } from "@/components/layout/AdminLayout";
@@ -23,7 +22,7 @@ import {
 } from "@/components/ui/card";
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { mockQuizzes } from '@/utils/mockData';
-import { supabase } from '@/services/supabaseClient';
+import { supabase } from '@/services/supabase';
 
 export default function ExamsPage() {
   const [exams, setExams] = useState<any[]>(mockQuizzes);

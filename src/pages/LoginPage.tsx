@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { toast } from "@/hooks/use-toast";
-import { supabase, setupDatabase } from "@/services/supabaseClient";
+import { supabase, setupDatabase } from "@/services/supabase";
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);

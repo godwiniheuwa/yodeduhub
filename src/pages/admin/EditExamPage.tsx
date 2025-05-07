@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { ExamForm } from "@/components/admin/ExamForm";
 import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/services/supabaseClient";
+import { supabase } from "@/services/supabase";
 import { mockQuizzes } from "@/utils/mockData";
 
 export default function EditExamPage() {

@@ -1,10 +1,9 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { ExamForm } from "@/components/admin/ExamForm";
 import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/services/supabaseClient";
+import { supabase } from "@/services/supabase";
 
 export default function CreateExamPage() {
   const [isLoading, setIsLoading] = useState(false);
