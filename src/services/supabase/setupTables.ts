@@ -14,13 +14,15 @@ export const setupExamTables = async () => {
       
       if (directYearsError && directYearsError.code === '42P01') {
         // Table doesn't exist, try to create it directly
-        const { error } = await supabase.query(`
-          CREATE TABLE IF NOT EXISTS years (
-            id TEXT PRIMARY KEY,
-            year INT NOT NULL,
-            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-          );
-        `);
+        // Use the rpc call with sql parameter instead of direct query
+        const { error } = await supabase.rpc('execute_sql', {
+          sql: `
+            CREATE TABLE IF NOT EXISTS years (
+              id TEXT PRIMARY KEY,
+              year INT NOT NULL,
+              created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            );`
+        });
         
         if (error) {
           console.error('Error creating years table directly:', error);
@@ -36,14 +38,15 @@ export const setupExamTables = async () => {
       const { error: directSubjectsError } = await supabase.from('subjects').select('count()').limit(1);
       
       if (directSubjectsError && directSubjectsError.code === '42P01') {
-        const { error } = await supabase.query(`
-          CREATE TABLE IF NOT EXISTS subjects (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            code TEXT,
-            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-          );
-        `);
+        const { error } = await supabase.rpc('execute_sql', {
+          sql: `
+            CREATE TABLE IF NOT EXISTS subjects (
+              id TEXT PRIMARY KEY,
+              name TEXT NOT NULL,
+              code TEXT,
+              created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            );`
+        });
         
         if (!error) console.log('Subjects table created successfully via direct SQL');
       }
@@ -55,16 +58,17 @@ export const setupExamTables = async () => {
       const { error: directExamsError } = await supabase.from('exams').select('count()').limit(1);
       
       if (directExamsError && directExamsError.code === '42P01') {
-        const { error } = await supabase.query(`
-          CREATE TABLE IF NOT EXISTS exams (
-            id TEXT PRIMARY KEY,
-            title TEXT NOT NULL,
-            year_id TEXT REFERENCES years(id),
-            subject_id TEXT REFERENCES subjects(id),
-            duration INT,
-            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-          );
-        `);
+        const { error } = await supabase.rpc('execute_sql', {
+          sql: `
+            CREATE TABLE IF NOT EXISTS exams (
+              id TEXT PRIMARY KEY,
+              title TEXT NOT NULL,
+              year_id TEXT REFERENCES years(id),
+              subject_id TEXT REFERENCES subjects(id),
+              duration INT,
+              created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            );`
+        });
         
         if (!error) console.log('Exams table created successfully via direct SQL');
       }
@@ -76,18 +80,19 @@ export const setupExamTables = async () => {
       const { error: directQuestionsError } = await supabase.from('questions').select('count()').limit(1);
       
       if (directQuestionsError && directQuestionsError.code === '42P01') {
-        const { error } = await supabase.query(`
-          CREATE TABLE IF NOT EXISTS questions (
-            id TEXT PRIMARY KEY,
-            exam_id TEXT REFERENCES exams(id),
-            question_text TEXT NOT NULL,
-            question_type TEXT NOT NULL,
-            options JSONB,
-            correct_answer TEXT,
-            marks INT DEFAULT 1,
-            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-          );
-        `);
+        const { error } = await supabase.rpc('execute_sql', {
+          sql: `
+            CREATE TABLE IF NOT EXISTS questions (
+              id TEXT PRIMARY KEY,
+              exam_id TEXT REFERENCES exams(id),
+              question_text TEXT NOT NULL,
+              question_type TEXT NOT NULL,
+              options JSONB,
+              correct_answer TEXT,
+              marks INT DEFAULT 1,
+              created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            );`
+        });
         
         if (!error) console.log('Questions table created successfully via direct SQL');
       }

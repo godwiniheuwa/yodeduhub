@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "@/hooks/use-toast";
-import { getYears, deleteYear } from '@/services/supabase/exam';
+import { getYears, deleteYear } from '@/services/supabase/years';
 import { setupExamTables } from '@/services/supabase/setupTables';
 
 export function useYearsManagement() {
