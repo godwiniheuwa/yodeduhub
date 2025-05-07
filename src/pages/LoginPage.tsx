@@ -16,11 +16,15 @@ export default function LoginPage() {
     // Test Supabase connection and setup database
     const initializeSupabase = async () => {
       try {
+        // Always run setup on app start - it will create tables if they don't exist
+        // The setupDatabase function has been improved to handle existing tables
+        setIsLoading(true);
+        
         // First check if we can connect to Supabase
-        const { error } = await supabase.from('quizzes').select('id').limit(1);
+        const { error } = await supabase.from('exams').select('id').limit(1);
         
         if (!error) {
-          console.log("Supabase connection successful!");
+          console.log("Supabase connection successful and tables exist!");
           setSupabaseConnected(true);
           toast({
             title: "Supabase Connected",
@@ -43,13 +47,15 @@ export default function LoginPage() {
             setDatabaseReady(true);
             toast({
               title: "Database Ready",
-              description: "Exam tables have been created successfully!",
+              description: "Exam tables have been created successfully with sample data!",
+              duration: 5000,
             });
           } else {
             toast({
               title: "Database Setup Failed",
-              description: "Could not create tables. Check console for details.",
+              description: "Could not create tables. Please check console for details or contact support.",
               variant: "destructive",
+              duration: 5000,
             });
           }
         } else {
@@ -59,9 +65,12 @@ export default function LoginPage() {
         console.error("Error connecting to Supabase:", error);
         toast({
           title: "Supabase Connection Failed",
-          description: "Please check your Supabase credentials and try again.",
+          description: "Please check your Supabase credentials or internet connection.",
           variant: "destructive",
+          duration: 5000,
         });
+      } finally {
+        setIsLoading(false);
       }
     };
 
