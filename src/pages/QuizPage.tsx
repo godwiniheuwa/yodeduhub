@@ -14,7 +14,7 @@ export default function QuizPage() {
   const [quiz, setQuiz] = useState<any>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [userAnswers, setUserAnswers] = useState<Record<string, any>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [quizStarted, setQuizStarted] = useState(false);
   const navigate = useNavigate();
@@ -46,8 +46,14 @@ export default function QuizPage() {
       return;
     }
     
-    // Get questions for this quiz
-    const quizQuestions = mockQuestions.filter(q => q.quizId === quizId);
+    // Get questions for this quiz and ensure they have the type property
+    const quizQuestions = mockQuestions
+      .filter(q => q.quizId === quizId)
+      .map(q => ({
+        ...q,
+        type: q.type || 'multiple-choice' // Set default type if not present
+      })) as Question[];
+    
     if (quizQuestions.length === 0) {
       toast({
         title: "No questions found",
@@ -80,10 +86,10 @@ export default function QuizPage() {
     setQuizStarted(true);
   };
 
-  const handleOptionSelect = (optionId: string) => {
-    setAnswers({
-      ...answers,
-      [questions[currentQuestionIndex].id]: optionId,
+  const handleSetUserAnswer = (questionId: string, answer: any) => {
+    setUserAnswers({
+      ...userAnswers,
+      [questionId]: answer,
     });
   };
 
@@ -106,10 +112,34 @@ export default function QuizPage() {
     // Calculate score (in a real app this would be submitted to the server)
     let correctAnswers = 0;
     
-    Object.entries(answers).forEach(([questionId, answerId]) => {
+    Object.entries(userAnswers).forEach(([questionId, answer]) => {
       const question = questions.find(q => q.id === questionId);
-      if (question && question.correctOptionId === answerId) {
-        correctAnswers++;
+      if (question) {
+        if (question.type === 'multiple-choice' && question.correctOptionId === answer) {
+          correctAnswers++;
+        } 
+        else if (question.type === 'multi-select' && question.correctOptionIds) {
+          // Compare arrays
+          const selectedIds = answer as string[];
+          const correctIds = question.correctOptionIds;
+          if (selectedIds.length === correctIds.length && 
+              selectedIds.every(id => correctIds.includes(id))) {
+            correctAnswers++;
+          }
+        }
+        else if (question.type === 'drag-drop' && question.correctOrder) {
+          // Compare orders
+          const userOrder = answer as string[];
+          if (JSON.stringify(userOrder) === JSON.stringify(question.correctOrder)) {
+            correctAnswers++;
+          }
+        }
+        else if (question.type === 'short-answer' && question.correctAnswer) {
+          // Case insensitive comparison
+          if (answer.toLowerCase().trim() === question.correctAnswer.toLowerCase().trim()) {
+            correctAnswers++;
+          }
+        }
       }
     });
     
@@ -122,7 +152,7 @@ export default function QuizPage() {
       totalQuestions: questions.length,
       correctAnswers,
       completedAt: new Date().toISOString(),
-      answers,
+      answers: userAnswers,
     };
     localStorage.setItem("quizResults", JSON.stringify(quizResults));
     
@@ -187,7 +217,7 @@ export default function QuizPage() {
                 <div className="space-y-4">
                   <h2 className="text-xl font-semibold">Instructions</h2>
                   <ul className="text-left space-y-2 text-gray-600 dark:text-gray-300">
-                    <li>• This quiz contains {questions.length} multiple choice questions</li>
+                    <li>• This quiz contains {questions.length} questions of various types</li>
                     <li>• You have {quiz.timeLimit} minutes to complete the quiz</li>
                     <li>• You can navigate between questions using the next/previous buttons</li>
                     <li>• Your results will be displayed at the end of the quiz</li>
@@ -220,8 +250,8 @@ export default function QuizPage() {
               <CardContent className="pt-6 px-6 pb-6">
                 <QuizQuestion 
                   question={questions[currentQuestionIndex]}
-                  selectedOptionId={answers[questions[currentQuestionIndex].id] || null}
-                  onOptionSelect={handleOptionSelect}
+                  userAnswers={userAnswers}
+                  setUserAnswer={handleSetUserAnswer}
                   onNextQuestion={handleNextQuestion}
                   onPreviousQuestion={handlePreviousQuestion}
                   isLastQuestion={currentQuestionIndex === questions.length - 1}

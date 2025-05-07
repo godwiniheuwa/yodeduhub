@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 type ResultSummaryProps = {
   score: number;
@@ -38,6 +39,12 @@ export function ResultSummary({
     return "Keep practicing. You'll improve with more study.";
   };
 
+  const getProgressBarClass = () => {
+    if (scorePercentage >= 80) return "bg-green-500";
+    if (scorePercentage >= 60) return "bg-yellow-500"; 
+    return "bg-red-500";
+  };
+
   return (
     <div className="space-y-6">
       <div className="text-center space-y-2">
@@ -59,10 +66,7 @@ export function ResultSummary({
             </p>
             <Progress 
               value={scorePercentage} 
-              className="w-full"
-              indicatorClassName={scorePercentage >= 80 ? "bg-green-500" : 
-                                 scorePercentage >= 60 ? "bg-yellow-500" : 
-                                 "bg-red-500"}
+              className={cn("w-full", getProgressBarClass())}
             />
           </div>
         </CardContent>

@@ -19,7 +19,7 @@ export type Question = QuestionType;
 
 type QuizQuestionProps = {
   question: Question;
-  userAnswers: any;
+  userAnswers: Record<string, any>;
   setUserAnswer: (questionId: string, answer: any) => void;
   onNextQuestion: () => void;
   onPreviousQuestion?: () => void;

@@ -62,7 +62,12 @@ export default function ResultsPage() {
     }
     
     // Get questions for this quiz
-    const quizQuestions = mockQuestions.filter(q => q.quizId === quizId);
+    const quizQuestions = mockQuestions
+      .filter(q => q.quizId === quizId)
+      .map(q => ({
+        ...q,
+        type: q.type || 'multiple-choice' // Set default type if not present
+      })) as Question[];
     
     setQuiz(foundQuiz);
     setQuestions(quizQuestions);
@@ -97,6 +102,11 @@ export default function ResultsPage() {
     }
   };
 
+  // This is a placeholder function since we're not changing answers in review mode
+  const handleSetUserAnswer = () => {
+    // Do nothing in review mode
+  };
+
   const formatTimeTaken = () => {
     // Mock time taken for demo
     const minutes = Math.floor(quiz.timeLimit * 0.6);
@@ -119,12 +129,6 @@ export default function ResultsPage() {
   }
   
   if (!quiz || !results || !user) return null;
-
-  // Add correctOptionId to questions for review mode
-  const reviewQuestions = questions.map(q => ({
-    ...q,
-    correctOptionId: q.correctOptionId,
-  }));
 
   return (
     <Layout 
@@ -159,15 +163,15 @@ export default function ResultsPage() {
             <Card className="quiz-card">
               <CardContent className="pt-6 px-6 pb-6">
                 <QuizQuestion 
-                  question={reviewQuestions[currentQuestionIndex]}
-                  selectedOptionId={results.answers[reviewQuestions[currentQuestionIndex].id] || null}
-                  onOptionSelect={() => {}}
+                  question={questions[currentQuestionIndex]}
+                  userAnswers={results.answers}
+                  setUserAnswer={handleSetUserAnswer}
                   onNextQuestion={handleNextQuestion}
                   onPreviousQuestion={handlePreviousQuestion}
-                  isLastQuestion={currentQuestionIndex === reviewQuestions.length - 1}
+                  isLastQuestion={currentQuestionIndex === questions.length - 1}
                   isFirstQuestion={currentQuestionIndex === 0}
                   currentQuestionNumber={currentQuestionIndex + 1}
-                  totalQuestions={reviewQuestions.length}
+                  totalQuestions={questions.length}
                   isReviewMode={true}
                 />
               </CardContent>
