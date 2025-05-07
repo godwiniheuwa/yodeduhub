@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "@/hooks/use-toast";
-import { getYears, deleteYear } from '@/services/supabase/years';
+import { getYears, addYear, deleteYear } from '@/services/supabase/years';
 import { setupExamTables } from '@/services/supabase/setupTables';
 
 export function useYearsManagement() {
@@ -21,9 +21,11 @@ export function useYearsManagement() {
   const setupTables = async () => {
     try {
       // First setup tables
-      await setupExamTables();
+      const result = await setupExamTables();
+      console.log('Tables setup result:', result);
+      
       // Then load years
-      loadYears();
+      await loadYears();
     } catch (error) {
       console.error('Error setting up tables:', error);
       setIsLoading(false);
@@ -55,9 +57,10 @@ export function useYearsManagement() {
 
   const loadYears = async () => {
     try {
+      console.log('Loading years...');
       const yearsData = await getYears();
+      console.log('Years data loaded:', yearsData);
       setYears(yearsData);
-      setIsLoading(false);
     } catch (error) {
       console.error('Error loading years:', error);
       toast({
@@ -65,6 +68,7 @@ export function useYearsManagement() {
         description: "Failed to load exam years",
         variant: "destructive",
       });
+    } finally {
       setIsLoading(false);
     }
   };
@@ -74,6 +78,7 @@ export function useYearsManagement() {
   };
 
   const handleYearAdded = (newYear: any) => {
+    console.log('New year added:', newYear);
     // Update local state with the newly added year
     setYears([...years, newYear].sort((a, b) => b.year - a.year));
   };
@@ -87,6 +92,7 @@ export function useYearsManagement() {
     if (!yearToDelete) return;
     
     try {
+      console.log('Deleting year:', yearToDelete);
       await deleteYear(yearToDelete);
       
       // Update local state after successful deletion

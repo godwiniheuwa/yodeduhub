@@ -4,7 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { toast } from "@/hooks/use-toast";
-import { supabase, setupDatabase } from "@/services/supabase";
+import { supabase } from "@/services/supabase/client";
+import { setupExamTables } from "@/services/supabase/setupTables";
+import { signIn } from "@/services/supabase/user";
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -20,7 +22,7 @@ export default function LoginPage() {
         setIsLoading(true);
         
         // First check if we can connect to Supabase
-        const { error } = await supabase.from('exams').select('id').limit(1);
+        const { error } = await supabase.from('users').select('id').limit(1);
         
         if (!error) {
           console.log("Supabase connection successful and tables exist!");
@@ -30,7 +32,7 @@ export default function LoginPage() {
             description: "Your application is successfully connected to Supabase!",
           });
           
-          // Tables already exist, no need to set them up
+          // Tables already exist
           setDatabaseReady(true);
         } else if (error.code === "42P01") {
           // Tables don't exist yet, but connection works
@@ -41,18 +43,18 @@ export default function LoginPage() {
           });
           
           // Set up the database tables
-          const setup = await setupDatabase();
+          const setup = await setupExamTables();
           if (setup) {
             setDatabaseReady(true);
             toast({
               title: "Database Ready",
-              description: "Exam tables have been created successfully with sample data!",
+              description: "Tables have been created successfully!",
               duration: 5000,
             });
           } else {
             toast({
               title: "Database Setup Failed",
-              description: "Could not create tables. Please check console for details or contact support.",
+              description: "Could not create tables. Please check console for details.",
               variant: "destructive",
               duration: 5000,
             });
@@ -80,22 +82,24 @@ export default function LoginPage() {
     setIsLoading(true);
     
     try {
-      // Sign in with Supabase auth
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      // Use the signIn function from user.ts
+      const data = await signIn(email, password);
       
-      if (error) throw error;
+      if (!data || !data.user) {
+        throw new Error("Authentication failed");
+      }
       
       // Get user's role from database
       const { data: userData, error: userError } = await supabase
         .from('users')
-        .select('name, role')
+        .select('id, name, email, role')
         .eq('id', data.user.id)
         .single();
       
       if (userError) throw userError;
+      
+      // Store user data in localStorage
+      localStorage.setItem("user", JSON.stringify(userData));
       
       toast({
         title: "Login successful",
@@ -109,14 +113,32 @@ export default function LoginPage() {
         navigate("/dashboard");
       }
     } catch (error: any) {
+      console.error("Login error:", error);
+      
       // For demo purposes, allow mock credentials to still work
       if (email === "student@example.com" && password === "password") {
+        const mockUser = {
+          id: "student-demo",
+          name: "Demo Student",
+          email: "student@example.com",
+          role: "student"
+        };
+        localStorage.setItem("user", JSON.stringify(mockUser));
+        
         toast({
           title: "Login successful",
           description: "Welcome back, Student! (Demo account)",
         });
         navigate("/dashboard");
       } else if (email === "admin@example.com" && password === "password") {
+        const mockAdmin = {
+          id: "admin-demo",
+          name: "Demo Admin",
+          email: "admin@example.com",
+          role: "admin"
+        };
+        localStorage.setItem("user", JSON.stringify(mockAdmin));
+        
         toast({
           title: "Login successful",
           description: "Welcome back, Admin! (Demo account)",

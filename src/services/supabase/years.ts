@@ -4,7 +4,7 @@ import { setupExamTables } from './setupTables';
 
 export const getYears = async () => {
   try {
-    // Try to setup tables first
+    // Setup tables first to ensure they exist
     await setupExamTables();
     
     // Now try to get years
@@ -15,7 +15,6 @@ export const getYears = async () => {
     
     if (error) {
       console.error('Error fetching years:', error);
-      // If table doesn't exist or other error, return empty array
       return [];
     }
     
@@ -28,7 +27,7 @@ export const getYears = async () => {
 
 export const addYear = async (year: number) => {
   try {
-    // Try to setup tables first
+    // Setup tables first to ensure they exist
     await setupExamTables();
     
     const yearData = {
@@ -37,18 +36,20 @@ export const addYear = async (year: number) => {
       created_at: new Date().toISOString()
     };
     
+    console.log('Attempting to add year:', yearData);
+    
     const { data, error } = await supabase
       .from('years')
       .insert([yearData])
-      .select()
-      .single();
+      .select();
     
     if (error) {
       console.error('Error adding year:', error);
       throw error;
     }
     
-    return data;
+    console.log('Year added successfully:', data);
+    return data[0];
   } catch (error) {
     console.error('Error in addYear:', error);
     throw error;
@@ -57,6 +58,8 @@ export const addYear = async (year: number) => {
 
 export const deleteYear = async (id: string) => {
   try {
+    console.log('Attempting to delete year with ID:', id);
+    
     const { error } = await supabase
       .from('years')
       .delete()
@@ -67,6 +70,7 @@ export const deleteYear = async (id: string) => {
       throw error;
     }
     
+    console.log('Year deleted successfully');
     return true;
   } catch (error) {
     console.error('Error in deleteYear:', error);

@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { SignupForm } from "@/components/auth/SignupForm";
 import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/services/supabase";
+import { signUp } from "@/services/supabase/user";
+import { setupExamTables } from "@/services/supabase/setupTables";
 
 export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -14,45 +15,32 @@ export default function SignupPage() {
     setIsLoading(true);
     
     try {
-      // 1. Create the user with Supabase auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-            role
-          }
+      // Ensure tables exist first
+      await setupExamTables();
+      
+      // Use the signUp function from user.ts
+      const userData = await signUp(email, password, { name, role });
+      
+      if (userData) {
+        // Save user to localStorage for frontend session management
+        localStorage.setItem("user", JSON.stringify({
+          id: userData.id,
+          name: userData.name,
+          email: userData.email,
+          role: userData.role
+        }));
+        
+        toast({
+          title: "Account created",
+          description: `Welcome to YODEDUHUB, ${name}!`,
+        });
+        
+        // Redirect based on role
+        if (role === "admin") {
+          navigate("/admin");
+        } else {
+          navigate("/dashboard");
         }
-      });
-
-      if (authError) throw authError;
-
-      // 2. Store additional user information in the database
-      const { error: userError } = await supabase
-        .from('users')
-        .insert([
-          { 
-            id: authData.user?.id,
-            name, 
-            email,
-            role,
-            created_at: new Date().toISOString()
-          }
-        ]);
-
-      if (userError) throw userError;
-      
-      toast({
-        title: "Account created",
-        description: `Welcome to YODEDUHUB, ${name}!`,
-      });
-      
-      // Redirect based on role
-      if (role === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/dashboard");
       }
     } catch (error: any) {
       toast({

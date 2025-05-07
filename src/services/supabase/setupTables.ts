@@ -4,98 +4,98 @@ import { supabase } from './client';
 // Setup tables if they don't exist
 export const setupExamTables = async () => {
   try {
+    // Instead of relying on RPC functions that don't exist, create tables directly with SQL
     // Create years table
-    const { error: yearsError } = await supabase.rpc('create_years_table').maybeSingle();
+    const { error: yearsError } = await supabase.rpc('execute_sql', {
+      sql: `
+        CREATE TABLE IF NOT EXISTS years (
+          id TEXT PRIMARY KEY,
+          year INT NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );`
+    });
+    
     if (yearsError) {
-      console.error('Error creating years table with RPC:', yearsError);
-      
-      // Try direct SQL as a fallback
-      const { error: directYearsError } = await supabase.from('years').select('count()').limit(1);
-      
-      if (directYearsError && directYearsError.code === '42P01') {
-        // Table doesn't exist, try to create it directly
-        // Use the rpc call with sql parameter instead of direct query
-        const { error } = await supabase.rpc('execute_sql', {
-          sql: `
-            CREATE TABLE IF NOT EXISTS years (
-              id TEXT PRIMARY KEY,
-              year INT NOT NULL,
-              created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            );`
-        });
-        
-        if (error) {
-          console.error('Error creating years table directly:', error);
-        } else {
-          console.log('Years table created successfully via direct SQL');
-        }
-      }
+      console.error('Error creating years table:', yearsError);
+    } else {
+      console.log('Years table created or already exists');
     }
 
-    // Create subjects table (with same fallback pattern)
-    const { error: subjectsError } = await supabase.rpc('create_subjects_table').maybeSingle();
+    // Create subjects table
+    const { error: subjectsError } = await supabase.rpc('execute_sql', {
+      sql: `
+        CREATE TABLE IF NOT EXISTS subjects (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          code TEXT,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );`
+    });
+    
     if (subjectsError) {
-      const { error: directSubjectsError } = await supabase.from('subjects').select('count()').limit(1);
-      
-      if (directSubjectsError && directSubjectsError.code === '42P01') {
-        const { error } = await supabase.rpc('execute_sql', {
-          sql: `
-            CREATE TABLE IF NOT EXISTS subjects (
-              id TEXT PRIMARY KEY,
-              name TEXT NOT NULL,
-              code TEXT,
-              created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            );`
-        });
-        
-        if (!error) console.log('Subjects table created successfully via direct SQL');
-      }
+      console.error('Error creating subjects table:', subjectsError);
+    } else {
+      console.log('Subjects table created or already exists');
     }
 
-    // Create exams table (with same fallback pattern)
-    const { error: examsError } = await supabase.rpc('create_exams_table').maybeSingle();
+    // Create exams table
+    const { error: examsError } = await supabase.rpc('execute_sql', {
+      sql: `
+        CREATE TABLE IF NOT EXISTS exams (
+          id TEXT PRIMARY KEY,
+          title TEXT NOT NULL,
+          year_id TEXT REFERENCES years(id),
+          subject_id TEXT REFERENCES subjects(id),
+          duration INT,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );`
+    });
+    
     if (examsError) {
-      const { error: directExamsError } = await supabase.from('exams').select('count()').limit(1);
-      
-      if (directExamsError && directExamsError.code === '42P01') {
-        const { error } = await supabase.rpc('execute_sql', {
-          sql: `
-            CREATE TABLE IF NOT EXISTS exams (
-              id TEXT PRIMARY KEY,
-              title TEXT NOT NULL,
-              year_id TEXT REFERENCES years(id),
-              subject_id TEXT REFERENCES subjects(id),
-              duration INT,
-              created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            );`
-        });
-        
-        if (!error) console.log('Exams table created successfully via direct SQL');
-      }
+      console.error('Error creating exams table:', examsError);
+    } else {
+      console.log('Exams table created or already exists');
     }
 
-    // Create questions table (with same fallback pattern)
-    const { error: questionsError } = await supabase.rpc('create_questions_table').maybeSingle();
+    // Create questions table
+    const { error: questionsError } = await supabase.rpc('execute_sql', {
+      sql: `
+        CREATE TABLE IF NOT EXISTS questions (
+          id TEXT PRIMARY KEY,
+          exam_id TEXT REFERENCES exams(id),
+          question_text TEXT NOT NULL,
+          question_type TEXT NOT NULL,
+          options JSONB,
+          correct_answer TEXT,
+          marks INT DEFAULT 1,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );`
+    });
+    
     if (questionsError) {
-      const { error: directQuestionsError } = await supabase.from('questions').select('count()').limit(1);
-      
-      if (directQuestionsError && directQuestionsError.code === '42P01') {
-        const { error } = await supabase.rpc('execute_sql', {
-          sql: `
-            CREATE TABLE IF NOT EXISTS questions (
-              id TEXT PRIMARY KEY,
-              exam_id TEXT REFERENCES exams(id),
-              question_text TEXT NOT NULL,
-              question_type TEXT NOT NULL,
-              options JSONB,
-              correct_answer TEXT,
-              marks INT DEFAULT 1,
-              created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            );`
-        });
-        
-        if (!error) console.log('Questions table created successfully via direct SQL');
-      }
+      console.error('Error creating questions table:', questionsError);
+    } else {
+      console.log('Questions table created or already exists');
+    }
+
+    // Also create users table if it doesn't exist
+    const { error: usersError } = await supabase.rpc('execute_sql', {
+      sql: `
+        CREATE TABLE IF NOT EXISTS users (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          email TEXT UNIQUE NOT NULL,
+          role TEXT DEFAULT 'student',
+          last_login TIMESTAMPTZ,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );`
+    });
+    
+    if (usersError) {
+      console.error('Error creating users table:', usersError);
+    } else {
+      console.log('Users table created or already exists');
     }
 
     return true;
