@@ -2,9 +2,65 @@
 import { supabase } from './client';
 import { Exam, Year, Subject, Question } from './types';
 
+// Setup tables if they don't exist
+export const setupExamTables = async () => {
+  try {
+    // Check if years table exists
+    const { error: yearsCheckError } = await supabase.rpc('check_table_exists', {
+      table_name: 'years'
+    });
+
+    // If there's an error, we need to create the table
+    if (yearsCheckError) {
+      console.log('Creating years table...');
+      await supabase.rpc('create_years_table');
+    }
+
+    // Check if subjects table exists
+    const { error: subjectsCheckError } = await supabase.rpc('check_table_exists', {
+      table_name: 'subjects'
+    });
+
+    // If there's an error, we need to create the table
+    if (subjectsCheckError) {
+      console.log('Creating subjects table...');
+      await supabase.rpc('create_subjects_table');
+    }
+
+    // Check if exams table exists
+    const { error: examsCheckError } = await supabase.rpc('check_table_exists', {
+      table_name: 'exams'
+    });
+
+    // If there's an error, we need to create the table
+    if (examsCheckError) {
+      console.log('Creating exams table...');
+      await supabase.rpc('create_exams_table');
+    }
+
+    // Check if questions table exists
+    const { error: questionsCheckError } = await supabase.rpc('check_table_exists', {
+      table_name: 'questions'
+    });
+
+    // If there's an error, we need to create the table
+    if (questionsCheckError) {
+      console.log('Creating questions table...');
+      await supabase.rpc('create_questions_table');
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error setting up exam tables:', error);
+    return false;
+  }
+};
+
 // Exam-related functions
 export const getExams = async () => {
   try {
+    await setupExamTables();
+    
     const { data, error } = await supabase
       .from('exams')
       .select('*');
@@ -110,6 +166,10 @@ export const deleteExam = async (id: string) => {
 
 export const getYears = async () => {
   try {
+    // Try to setup tables first
+    await setupExamTables();
+    
+    // Now try to get years
     const { data, error } = await supabase
       .from('years')
       .select('*')
@@ -117,6 +177,7 @@ export const getYears = async () => {
     
     if (error) {
       console.error('Error fetching years:', error);
+      // If table doesn't exist or other error, return empty array
       return [];
     }
     
@@ -147,6 +208,9 @@ export const getSubjects = async () => {
 
 export const addQuestion = async (questionData: Partial<Question>) => {
   try {
+    // Try to setup tables first
+    await setupExamTables();
+    
     // Generate a unique ID if not provided
     const questionWithId = {
       ...questionData,
@@ -174,6 +238,9 @@ export const addQuestion = async (questionData: Partial<Question>) => {
 
 export const getQuestions = async (examId?: string, yearId?: string, subjectId?: string) => {
   try {
+    // Try to setup tables first
+    await setupExamTables();
+    
     let query = supabase.from('questions').select('*');
     
     if (examId) {
@@ -204,6 +271,9 @@ export const getQuestions = async (examId?: string, yearId?: string, subjectId?:
 
 export const addYear = async (year: number) => {
   try {
+    // Try to setup tables first
+    await setupExamTables();
+    
     const yearData = {
       id: `year-${year}`,
       year: year,
@@ -230,6 +300,9 @@ export const addYear = async (year: number) => {
 
 export const addSubject = async (name: string) => {
   try {
+    // Try to setup tables first
+    await setupExamTables();
+    
     const subjectData = {
       id: `subject-${Date.now()}`,
       name: name,

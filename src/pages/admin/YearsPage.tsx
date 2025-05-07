@@ -29,21 +29,45 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Plus, Trash2 } from 'lucide-react';
-import { getYears, addYear } from '@/services/supabase/exam';
+import { getYears, addYear, setupExamTables } from '@/services/supabase/exam';
 
 export default function YearsPage() {
   const [years, setYears] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [yearValue, setYearValue] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [yearToDelete, setYearToDelete] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     checkAuth();
-    loadYears();
+    setupTables();
   }, []);
+  
+  const setupTables = async () => {
+    try {
+      // First setup tables
+      await setupExamTables();
+      // Then load years
+      loadYears();
+    } catch (error) {
+      console.error('Error setting up tables:', error);
+      setIsLoading(false);
+    }
+  };
 
   const checkAuth = () => {
     const storedUser = localStorage.getItem("user");
@@ -137,6 +161,11 @@ export default function YearsPage() {
     }
   };
 
+  const openDeleteDialog = (id: string) => {
+    setYearToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
   const handleDeleteYear = async (id: string) => {
     try {
       // For now, just remove from UI
@@ -147,6 +176,9 @@ export default function YearsPage() {
         title: "Year deleted",
         description: "The exam year has been removed successfully",
       });
+      
+      setDeleteDialogOpen(false);
+      setYearToDelete(null);
     } catch (error) {
       console.error('Error deleting year:', error);
       toast({
@@ -217,7 +249,7 @@ export default function YearsPage() {
                           variant="outline" 
                           size="sm" 
                           className="text-red-500 hover:text-red-700" 
-                          onClick={() => handleDeleteYear(year.id)}
+                          onClick={() => openDeleteDialog(year.id)}
                         >
                           <Trash2 className="h-4 w-4 mr-1" /> Delete
                         </Button>
@@ -271,6 +303,32 @@ export default function YearsPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirm deletion</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this exam year? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => {
+                setDeleteDialogOpen(false);
+                setYearToDelete(null);
+              }}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction 
+                className="bg-red-600 hover:bg-red-700 focus:ring-red-600" 
+                onClick={() => yearToDelete && handleDeleteYear(yearToDelete)}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   );
