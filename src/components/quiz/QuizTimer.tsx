@@ -48,6 +48,23 @@ export function QuizTimer({ durationInMinutes, onTimeUp }: QuizTimerProps) {
   };
 
   const progressPercentage = (timeLeft / totalTime) * 100;
+  
+  // Use proper Progress element classes
+  const progressClassName = `h-2 ${
+    isDanger
+      ? "bg-red-100 dark:bg-red-900/20"
+      : isWarning
+      ? "bg-yellow-100 dark:bg-yellow-900/20"
+      : "bg-gray-100 dark:bg-gray-800"
+  }`;
+  
+  const progressStyle = {
+    backgroundColor: isDanger
+      ? "var(--destructive)"
+      : isWarning
+      ? "#f59e0b"
+      : "var(--primary)"
+  };
 
   return (
     <div className="space-y-2">
@@ -67,20 +84,7 @@ export function QuizTimer({ durationInMinutes, onTimeUp }: QuizTimerProps) {
       </div>
       <Progress
         value={progressPercentage}
-        className={`h-2 ${
-          isDanger
-            ? "bg-red-100 dark:bg-red-900/20"
-            : isWarning
-            ? "bg-yellow-100 dark:bg-yellow-900/20"
-            : "bg-gray-100 dark:bg-gray-800"
-        }`}
-        indicatorClassName={`${
-          isDanger
-            ? "bg-red-500"
-            : isWarning
-            ? "bg-yellow-500"
-            : "bg-quiz-primary"
-        }`}
+        className={progressClassName}
       />
     </div>
   );

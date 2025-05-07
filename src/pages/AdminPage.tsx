@@ -58,6 +58,11 @@ export default function AdminPage() {
     navigate("/login");
   };
 
+  const handleCreateNewQuiz = () => {
+    // Navigate to the create quiz page
+    navigate("/admin/quiz/new");
+  };
+
   if (isLoading) {
     return (
       <Layout>
@@ -85,17 +90,18 @@ export default function AdminPage() {
         <header className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold mb-2">
-              Admin Dashboard
+              YodeduHub Admin
             </h1>
             <p className="text-gray-500 dark:text-gray-400">
-              Manage quizzes, questions, and view statistics
+              UNESCO Youth Orientation for Development
             </p>
           </div>
-          <Link to="/admin/quiz/new">
-            <Button className="button-quiz-primary">
-              Create New Quiz
-            </Button>
-          </Link>
+          <Button 
+            className="button-quiz-primary"
+            onClick={handleCreateNewQuiz}
+          >
+            Create New Quiz
+          </Button>
         </header>
         
         {/* Admin Statistics */}

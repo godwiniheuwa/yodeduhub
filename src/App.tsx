@@ -11,6 +11,9 @@ import DashboardPage from "./pages/DashboardPage";
 import AdminPage from "./pages/AdminPage";
 import QuizPage from "./pages/QuizPage";
 import ResultsPage from "./pages/ResultsPage";
+import CreateQuizPage from "./pages/CreateQuizPage";
+import EditQuizPage from "./pages/EditQuizPage";
+import QuestionsManagePage from "./pages/QuestionsManagePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +30,9 @@ const App = () => (
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/admin" element={<AdminPage />} />
+          <Route path="/admin/quiz/new" element={<CreateQuizPage />} />
+          <Route path="/admin/quiz/:quizId/edit" element={<EditQuizPage />} />
+          <Route path="/admin/quiz/:quizId/questions" element={<QuestionsManagePage />} />
           <Route path="/quiz/:quizId" element={<QuizPage />} />
           <Route path="/results/:quizId" element={<ResultsPage />} />
           <Route path="*" element={<NotFound />} />
