@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
@@ -16,7 +17,6 @@ export default function LoginPage() {
     const initializeSupabase = async () => {
       try {
         // Always run setup on app start - it will create tables if they don't exist
-        // The setupDatabase function has been improved to handle existing tables
         setIsLoading(true);
         
         // First check if we can connect to Supabase
@@ -76,45 +76,62 @@ export default function LoginPage() {
     initializeSupabase();
   }, []);
 
-  const handleLogin = (email: string, password: string) => {
+  const handleLogin = async (email: string, password: string) => {
     setIsLoading(true);
     
-    // Mock login process - in a real app this would be an API call
-    setTimeout(() => {
-      // Mock credentials for demo
+    try {
+      // Sign in with Supabase auth
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) throw error;
+      
+      // Get user's role from database
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('name, role')
+        .eq('id', data.user.id)
+        .single();
+      
+      if (userError) throw userError;
+      
+      toast({
+        title: "Login successful",
+        description: `Welcome back, ${userData.name}!`,
+      });
+      
+      // Navigate based on role
+      if (userData.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
+    } catch (error: any) {
+      // For demo purposes, allow mock credentials to still work
       if (email === "student@example.com" && password === "password") {
         toast({
           title: "Login successful",
-          description: "Welcome back, Student!",
+          description: "Welcome back, Student! (Demo account)",
         });
-        // Store user data in localStorage
-        localStorage.setItem("user", JSON.stringify({ 
-          email,
-          role: "student",
-          name: "John Student",
-        }));
         navigate("/dashboard");
       } else if (email === "admin@example.com" && password === "password") {
         toast({
           title: "Login successful",
-          description: "Welcome back, Admin!",
+          description: "Welcome back, Admin! (Demo account)",
         });
-        // Store user data in localStorage
-        localStorage.setItem("user", JSON.stringify({ 
-          email, 
-          role: "admin",
-          name: "Jane Admin",
-        }));
         navigate("/admin");
       } else {
         toast({
           title: "Login failed",
-          description: "Invalid email or password. Try student@example.com / password or admin@example.com / password",
+          description: error.message || "Invalid email or password",
           variant: "destructive",
         });
       }
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (

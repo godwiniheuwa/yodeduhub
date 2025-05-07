@@ -5,3 +5,5 @@ export * from './types';
 export * from './database';
 export * from './quiz';
 export * from './exam';
+export * from './user';
+

@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 
 // Database setup function - call this to ensure tables exist
@@ -107,6 +108,41 @@ export const setupDatabase = async () => {
             score INTEGER,
             max_score INTEGER,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+          );`,
+
+          // Create users table for authentication
+          `CREATE TABLE IF NOT EXISTS public.users (
+            id UUID PRIMARY KEY,
+            name TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            role TEXT NOT NULL DEFAULT 'student',
+            avatar_url TEXT,
+            last_login TIMESTAMP WITH TIME ZONE,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+          );`,
+
+          // Create user_preferences table
+          `CREATE TABLE IF NOT EXISTS public.user_preferences (
+            user_id UUID PRIMARY KEY REFERENCES public.users(id),
+            theme TEXT DEFAULT 'light',
+            notifications_enabled BOOLEAN DEFAULT TRUE,
+            email_notifications BOOLEAN DEFAULT TRUE,
+            dashboard_layout JSONB,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+          );`,
+
+          // Create user_progress table for tracking educational progress
+          `CREATE TABLE IF NOT EXISTS public.user_progress (
+            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            user_id UUID REFERENCES public.users(id),
+            subject_id TEXT REFERENCES public.subjects(id),
+            completed_topics INTEGER DEFAULT 0,
+            total_topics INTEGER DEFAULT 0,
+            last_activity TIMESTAMP WITH TIME ZONE,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
           );`
         ];
         
@@ -232,5 +268,107 @@ export const getDashboardStats = async () => {
       totalStudents: 0,
       totalCompletions: 0
     };
+  }
+};
+
+// User-related database functions
+export const getCurrentUser = async () => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) return null;
+    
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+    
+    if (error) throw error;
+    
+    return data;
+  } catch (error) {
+    console.error('Error getting current user:', error);
+    return null;
+  }
+};
+
+export const getUserPreferences = async (userId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('user_preferences')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+    
+    if (error) throw error;
+    
+    return data;
+  } catch (error) {
+    console.error('Error getting user preferences:', error);
+    return null;
+  }
+};
+
+export const updateUserPreferences = async (userId: string, preferences: any) => {
+  try {
+    const { data, error } = await supabase
+      .from('user_preferences')
+      .upsert({
+        user_id: userId,
+        ...preferences,
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    return data;
+  } catch (error) {
+    console.error('Error updating user preferences:', error);
+    return null;
+  }
+};
+
+export const getUserProgress = async (userId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('user_progress')
+      .select(`
+        *,
+        subjects:subject_id (name)
+      `)
+      .eq('user_id', userId);
+    
+    if (error) throw error;
+    
+    return data;
+  } catch (error) {
+    console.error('Error getting user progress:', error);
+    return [];
+  }
+};
+
+export const updateUserProgress = async (userId: string, subjectId: string, progressData: any) => {
+  try {
+    const { data, error } = await supabase
+      .from('user_progress')
+      .upsert({
+        user_id: userId,
+        subject_id: subjectId,
+        ...progressData,
+        last_activity: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    return data;
+  } catch (error) {
+    console.error('Error updating user progress:', error);
+    return null;
   }
 };

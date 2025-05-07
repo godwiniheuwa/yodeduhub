@@ -78,3 +78,37 @@ export interface Attempt {
   max_score: number;
   created_at: string;
 }
+
+// New interfaces for user authentication and profile
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'student' | 'admin' | 'teacher';
+  avatar_url?: string;
+  last_login?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserPreferences {
+  user_id: string;
+  theme: 'light' | 'dark' | 'system';
+  notifications_enabled: boolean;
+  email_notifications: boolean;
+  dashboard_layout?: any;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserProgress {
+  id: string;
+  user_id: string;
+  subject_id: string;
+  completed_topics: number;
+  total_topics: number;
+  last_activity?: string;
+  created_at: string;
+  updated_at: string;
+  subject?: Subject;
+}

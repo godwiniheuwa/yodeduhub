@@ -4,27 +4,49 @@ import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { SignupForm } from "@/components/auth/SignupForm";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/services/supabase";
 
 export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSignup = (name: string, email: string, password: string, role: string) => {
+  const handleSignup = async (name: string, email: string, password: string, role: string) => {
     setIsLoading(true);
     
-    // Mock signup process - in a real app this would be an API call
-    setTimeout(() => {
+    try {
+      // 1. Create the user with Supabase auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+            role
+          }
+        }
+      });
+
+      if (authError) throw authError;
+
+      // 2. Store additional user information in the database
+      const { error: userError } = await supabase
+        .from('users')
+        .insert([
+          { 
+            id: authData.user?.id,
+            name, 
+            email,
+            role,
+            created_at: new Date().toISOString()
+          }
+        ]);
+
+      if (userError) throw userError;
+      
       toast({
         title: "Account created",
         description: `Welcome to YODEDUHUB, ${name}!`,
       });
-      
-      // Store user data in localStorage
-      localStorage.setItem("user", JSON.stringify({ 
-        email, 
-        role,
-        name,
-      }));
       
       // Redirect based on role
       if (role === "admin") {
@@ -32,9 +54,15 @@ export default function SignupPage() {
       } else {
         navigate("/dashboard");
       }
-      
+    } catch (error: any) {
+      toast({
+        title: "Signup failed",
+        description: error.message || "An error occurred during signup",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
