@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { uploadQuestionMedia } from '@/services/supabaseClient';
+import { uploadQuestionMedia } from '@/services/supabase/quiz';
 import { toast } from "@/hooks/use-toast";
 import { Image, Music, Video, File, X } from "lucide-react";
 

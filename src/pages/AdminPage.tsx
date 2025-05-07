@@ -7,7 +7,7 @@ import { RecentExams } from "@/components/admin/RecentExams";
 import { QuickActions } from "@/components/admin/QuickActions";
 import { toast } from "@/hooks/use-toast";
 import { mockQuizzes } from "@/utils/mockData";
-import { supabase } from "@/services/supabaseClient";
+import { supabase } from "@/services/supabase";
 
 export default function AdminPage() {
   const [user, setUser] = useState<any>(null);

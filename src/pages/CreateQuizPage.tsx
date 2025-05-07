@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { QuizForm } from "@/components/admin/QuizForm";
 import { QuizImport } from "@/components/admin/QuizImport";
-import { createQuiz } from "@/services/supabaseClient";
+import { createQuiz } from "@/services/supabase/quiz";
 import { toast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 

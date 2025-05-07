@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 
 // Database setup function - call this to ensure tables exist
@@ -138,6 +137,10 @@ export const setupDatabase = async () => {
           ('subject-5', 'Biology')
           ON CONFLICT (id) DO NOTHING;`
         ];
+        
+        // Get Supabase URL and key from the client
+        const supabaseUrl = 'https://evbznrkdjwzmhbokxtjd.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2Ynpucmtkand6bWhib2t4dGpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY2NTUxMDIsImV4cCI6MjA2MjIzMTEwMn0.ESnOCWrRkeNxei-ASUCjr5x1rrL4gog_uHHAxM9rerk';
         
         // Execute all SQL queries using the Supabase REST API
         for (const query of [...sqlQueries, ...sampleData]) {
