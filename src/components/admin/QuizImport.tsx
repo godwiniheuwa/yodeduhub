@@ -74,7 +74,7 @@ export function QuizImport({ onImportSuccess }: QuizImportProps) {
               const options = row.options?.split(',').map((opt: string) => opt.trim()) || [];
               
               // Handle correct answer based on question type
-              let correctAnswer = row.correct_answer;
+              let correctAnswer: string | string[] = row.correct_answer;
               if (row.question_type === 'multiple_choice' && row.correct_answer?.includes(',')) {
                 correctAnswer = row.correct_answer.split(',').map((ans: string) => ans.trim());
               }
