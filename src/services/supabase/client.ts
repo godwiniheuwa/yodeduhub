@@ -12,134 +12,50 @@ try {
   supabase = createClient(supabaseUrl, supabaseAnonKey);
   console.log("Supabase client initialized");
   
-  // Create SQL functions for table operations
+  // Create SQL functions for table operations using createClient options
   const setupFunctions = async () => {
-    // Function to check if a table exists
-    await supabase.rpc('create_check_table_exists_function', {}, {
-      count: 'exact'
-    }).catch(() => {
-      // If function doesn't exist, create it
-      return supabase.sql(`
-        create or replace function check_table_exists(table_name text)
-        returns boolean
-        language plpgsql
-        as $$
-        declare
-          table_exists boolean;
-        begin
-          select exists(
-            select 1
-            from information_schema.tables
-            where table_schema = 'public'
-            and table_name = $1
-          ) into table_exists;
-          return table_exists;
-        end;
-        $$;
-      `).catch(err => console.log('Error creating check_table_exists function:', err));
-    });
+    try {
+      // Function to check if a table exists
+      await supabase.rpc('create_check_table_exists_function');
+    } catch (err) {
+      // If function doesn't exist, warn in console
+      console.log('Note: check_table_exists function might need to be created manually');
+    }
 
-    // Function to create years table
-    await supabase.rpc('create_years_table_function', {}, {
-      count: 'exact'
-    }).catch(() => {
-      // If function doesn't exist, create it
-      return supabase.sql(`
-        create or replace function create_years_table()
-        returns void
-        language plpgsql
-        as $$
-        begin
-          create table if not exists public.years (
-            id text primary key,
-            year integer not null,
-            created_at timestamp with time zone default timezone('utc'::text, now()) not null
-          );
-        end;
-        $$;
-      `).catch(err => console.log('Error creating create_years_table function:', err));
-    });
+    try {
+      // Function to create years table
+      await supabase.rpc('create_years_table_function');
+    } catch (err) {
+      console.log('Note: create_years_table function might need to be created manually');
+    }
 
-    // Function to create subjects table
-    await supabase.rpc('create_subjects_table_function', {}, {
-      count: 'exact'
-    }).catch(() => {
-      // If function doesn't exist, create it
-      return supabase.sql(`
-        create or replace function create_subjects_table()
-        returns void
-        language plpgsql
-        as $$
-        begin
-          create table if not exists public.subjects (
-            id text primary key,
-            name text not null,
-            created_at timestamp with time zone default timezone('utc'::text, now()) not null
-          );
-        end;
-        $$;
-      `).catch(err => console.log('Error creating create_subjects_table function:', err));
-    });
+    try {
+      // Function to create subjects table
+      await supabase.rpc('create_subjects_table_function');
+    } catch (err) {
+      console.log('Note: create_subjects_table function might need to be created manually');
+    }
 
-    // Function to create exams table
-    await supabase.rpc('create_exams_table_function', {}, {
-      count: 'exact'
-    }).catch(() => {
-      // If function doesn't exist, create it
-      return supabase.sql(`
-        create or replace function create_exams_table()
-        returns void
-        language plpgsql
-        as $$
-        begin
-          create table if not exists public.exams (
-            id text primary key,
-            name text not null,
-            description text,
-            created_at timestamp with time zone default timezone('utc'::text, now()) not null
-          );
-        end;
-        $$;
-      `).catch(err => console.log('Error creating create_exams_table function:', err));
-    });
+    try {
+      // Function to create exams table
+      await supabase.rpc('create_exams_table_function');
+    } catch (err) {
+      console.log('Note: create_exams_table function might need to be created manually');
+    }
 
-    // Function to create questions table
-    await supabase.rpc('create_questions_table_function', {}, {
-      count: 'exact'
-    }).catch(() => {
-      // If function doesn't exist, create it
-      return supabase.sql(`
-        create or replace function create_questions_table()
-        returns void
-        language plpgsql
-        as $$
-        begin
-          create table if not exists public.questions (
-            id text primary key,
-            exam_id text references public.exams(id),
-            year_id text references public.years(id),
-            subject_id text references public.subjects(id),
-            question_text text not null,
-            question_type text not null,
-            options jsonb,
-            correct_answer jsonb,
-            points integer default 1,
-            image_url text,
-            audio_url text,
-            video_url text,
-            created_at timestamp with time zone default timezone('utc'::text, now()) not null
-          );
-        end;
-        $$;
-      `).catch(err => console.log('Error creating create_questions_table function:', err));
-    });
+    try {
+      // Function to create questions table
+      await supabase.rpc('create_questions_table_function');
+    } catch (err) {
+      console.log('Note: create_questions_table function might need to be created manually');
+    }
   };
 
   // Run setup on initialization
   setupFunctions().then(() => {
-    console.log("SQL functions created successfully");
+    console.log("SQL functions initialized");
   }).catch(err => {
-    console.error("Error creating SQL functions:", err);
+    console.error("Error initializing SQL functions:", err);
   });
   
 } catch (error) {
