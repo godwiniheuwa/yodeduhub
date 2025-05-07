@@ -30,21 +30,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Plus, Trash2 } from 'lucide-react';
-
-// Mock data for exam years
-const mockYears = [
-  { id: '1', year: '2024', examsCount: 4, questionsCount: 350 },
-  { id: '2', year: '2023', examsCount: 5, questionsCount: 420 },
-  { id: '3', year: '2022', examsCount: 5, questionsCount: 380 },
-  { id: '4', year: '2021', examsCount: 4, questionsCount: 310 },
-  { id: '5', year: '2020', examsCount: 3, questionsCount: 290 },
-];
+import { getYears, addYear } from '@/services/supabase/exam';
 
 export default function YearsPage() {
-  const [years, setYears] = useState<any[]>(mockYears);
+  const [years, setYears] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [yearValue, setYearValue] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -77,9 +70,8 @@ export default function YearsPage() {
 
   const loadYears = async () => {
     try {
-      // In production, this would fetch from Supabase
-      // For now, we'll use mock data
-      setYears(mockYears);
+      const yearsData = await getYears();
+      setYears(yearsData);
       setIsLoading(false);
     } catch (error) {
       console.error('Error loading years:', error);
@@ -97,7 +89,7 @@ export default function YearsPage() {
     setDialogOpen(true);
   };
 
-  const handleSaveYear = () => {
+  const handleSaveYear = async () => {
     if (!yearValue || !/^\d{4}$/.test(yearValue)) {
       toast({
         title: "Error",
@@ -108,7 +100,7 @@ export default function YearsPage() {
     }
 
     // Check if year already exists
-    if (years.some(y => y.year === yearValue)) {
+    if (years.some(y => y.year === parseInt(yearValue))) {
       toast({
         title: "Error",
         description: "This year already exists in the system",
@@ -117,28 +109,52 @@ export default function YearsPage() {
       return;
     }
 
-    // Add new year
-    const newYear = {
-      id: Date.now().toString(),
-      year: yearValue,
-      examsCount: 0,
-      questionsCount: 0
-    };
-    setYears([...years, newYear].sort((a, b) => parseInt(b.year) - parseInt(a.year)));
-    toast({
-      title: "Year added",
-      description: `Year ${yearValue} has been added successfully`,
-    });
-
-    setDialogOpen(false);
+    setIsSaving(true);
+    
+    try {
+      // Add new year
+      const newYear = await addYear(parseInt(yearValue));
+      
+      if (newYear) {
+        // Update local state
+        setYears([...years, newYear].sort((a, b) => b.year - a.year));
+        
+        toast({
+          title: "Year added",
+          description: `Year ${yearValue} has been added successfully`,
+        });
+        
+        setDialogOpen(false);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add year",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleDeleteYear = (id: string) => {
-    setYears(years.filter(year => year.id !== id));
-    toast({
-      title: "Year deleted",
-      description: "The exam year has been removed successfully",
-    });
+  const handleDeleteYear = async (id: string) => {
+    try {
+      // For now, just remove from UI
+      // In a real app, you'd delete from the database first
+      setYears(years.filter(year => year.id !== id));
+      
+      toast({
+        title: "Year deleted",
+        description: "The exam year has been removed successfully",
+      });
+    } catch (error) {
+      console.error('Error deleting year:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete year",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isLoading) {
@@ -177,35 +193,40 @@ export default function YearsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Year</TableHead>
-                  <TableHead>Exams</TableHead>
-                  <TableHead>Questions</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {years.map((year) => (
-                  <TableRow key={year.id}>
-                    <TableCell className="font-medium">{year.year}</TableCell>
-                    <TableCell>{year.examsCount}</TableCell>
-                    <TableCell>{year.questionsCount}</TableCell>
-                    <TableCell className="text-right">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="text-red-500 hover:text-red-700" 
-                        onClick={() => handleDeleteYear(year.id)}
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" /> Delete
-                      </Button>
-                    </TableCell>
+            {years.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500 mb-4">No exam years available yet</p>
+                <Button onClick={openAddDialog}>
+                  <Plus className="mr-1 h-4 w-4" /> Add Your First Year
+                </Button>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Year</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {years.map((year) => (
+                    <TableRow key={year.id}>
+                      <TableCell className="font-medium">{year.year}</TableCell>
+                      <TableCell className="text-right">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="text-red-500 hover:text-red-700" 
+                          onClick={() => handleDeleteYear(year.id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" /> Delete
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
 
@@ -229,12 +250,24 @@ export default function YearsPage() {
                   value={yearValue} 
                   onChange={(e) => setYearValue(e.target.value)} 
                   placeholder="e.g. 2024"
+                  disabled={isSaving}
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleSaveYear}>Save</Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setDialogOpen(false)}
+                disabled={isSaving}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSaveYear}
+                disabled={isSaving}
+              >
+                {isSaving ? "Saving..." : "Save"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

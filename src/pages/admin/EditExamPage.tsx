@@ -4,8 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { ExamForm } from "@/components/admin/ExamForm";
 import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/services/supabase";
-import { mockQuizzes } from "@/utils/mockData";
+import { getExamById, updateExam } from "@/services/supabase/exam";
 
 export default function EditExamPage() {
   const [exam, setExam] = useState<any>(null);
@@ -15,24 +14,16 @@ export default function EditExamPage() {
   const { examId } = useParams<{ examId: string }>();
 
   useEffect(() => {
-    loadExam();
+    if (examId) {
+      loadExam(examId);
+    }
   }, [examId]);
 
-  const loadExam = async () => {
+  const loadExam = async (id: string) => {
     try {
-      // In a real app, you'd fetch from Supabase
-      // const { data, error } = await supabase
-      //   .from('exams')
-      //   .select('*')
-      //   .eq('id', examId)
-      //   .single();
+      const examData = await getExamById(id);
       
-      // if (error) throw error;
-      // setExam(data);
-      
-      // Mock data for now
-      const mockExam = mockQuizzes.find(q => q.id === examId);
-      if (!mockExam) {
+      if (!examData) {
         toast({
           title: "Exam not found",
           description: "The requested exam does not exist",
@@ -42,12 +33,7 @@ export default function EditExamPage() {
         return;
       }
       
-      // Transform the mock quiz into exam format
-      setExam({
-        ...mockExam,
-        abbreviation: mockExam.title.substring(0, 4).toUpperCase()
-      });
-      
+      setExam(examData);
       setIsLoading(false);
     } catch (error: any) {
       toast({
@@ -60,32 +46,26 @@ export default function EditExamPage() {
   };
 
   const handleUpdateExam = async (examData: any) => {
+    if (!examId) return;
+    
     setIsSaving(true);
     try {
-      // In a real application, you'd use Supabase
-      // const { error } = await supabase
-      //   .from('exams')
-      //   .update(examData)
-      //   .eq('id', examId);
+      const updatedExam = await updateExam(examId, examData);
       
-      // if (error) throw error;
-      
-      // Mock success for now
-      setTimeout(() => {
+      if (updatedExam) {
         toast({
           title: "Exam updated",
-          description: `${examData.title} has been updated successfully`,
+          description: `${updatedExam.name} has been updated successfully`,
         });
         navigate('/admin/exams');
-        setIsSaving(false);
-      }, 1000);
-      
+      }
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "Failed to update exam",
         variant: "destructive",
       });
+    } finally {
       setIsSaving(false);
     }
   };

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AdminLayout } from "@/components/layout/AdminLayout";
@@ -20,13 +21,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Plus, Edit, Trash2 } from 'lucide-react';
-import { mockQuizzes } from '@/utils/mockData';
-import { supabase } from '@/services/supabase';
+import { Plus, Edit, Trash2, FileText } from 'lucide-react';
+import { getExams, deleteExam, getQuestions } from '@/services/supabase/exam';
 
 export default function ExamsPage() {
-  const [exams, setExams] = useState<any[]>(mockQuizzes);
+  const [exams, setExams] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [questionCounts, setQuestionCounts] = useState<{[key: string]: number}>({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -59,9 +60,18 @@ export default function ExamsPage() {
 
   const loadExams = async () => {
     try {
-      // In production, this would fetch from Supabase
-      // For now, we'll use mock data
-      setExams(mockQuizzes);
+      const examsData = await getExams();
+      setExams(examsData);
+      
+      // Get question counts for each exam
+      for (const exam of examsData) {
+        const questions = await getQuestions(exam.id);
+        setQuestionCounts(prev => ({
+          ...prev,
+          [exam.id]: questions.length
+        }));
+      }
+      
       setIsLoading(false);
     } catch (error) {
       console.error('Error loading exams:', error);
@@ -78,12 +88,27 @@ export default function ExamsPage() {
     navigate('/admin/exams/new');
   };
 
-  const handleDeleteExam = (id: string) => {
-    // In production, delete from Supabase
-    setExams(exams.filter(exam => exam.id !== id));
-    toast({
-      title: "Exam deleted",
-      description: "The exam has been successfully deleted",
+  const handleDeleteExam = async (id: string) => {
+    try {
+      await deleteExam(id);
+      setExams(exams.filter(exam => exam.id !== id));
+      toast({
+        title: "Exam deleted",
+        description: "The exam has been successfully deleted",
+      });
+    } catch (error) {
+      console.error('Error deleting exam:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete exam",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleManageQuestions = (exam: any) => {
+    navigate(`/admin/exams/${exam.id}/questions`, {
+      state: { examName: exam.name }
     });
   };
 
@@ -123,39 +148,49 @@ export default function ExamsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Exam Name</TableHead>
-                  <TableHead>Abbreviation</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Years Available</TableHead>
-                  <TableHead>Total Questions</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {exams.map((exam) => (
-                  <TableRow key={exam.id}>
-                    <TableCell className="font-medium">{exam.title}</TableCell>
-                    <TableCell>{exam.title.substring(0, 4).toUpperCase()}</TableCell>
-                    <TableCell className="max-w-xs truncate">{exam.description || "No description available"}</TableCell>
-                    <TableCell>2018-2024</TableCell>
-                    <TableCell>{exam.questionsCount || 0}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => navigate(`/admin/exams/${exam.id}/edit`)}>
-                          <Edit className="h-4 w-4 mr-1" /> Edit
-                        </Button>
-                        <Button variant="outline" size="sm" className="text-red-500 hover:text-red-700" onClick={() => handleDeleteExam(exam.id)}>
-                          <Trash2 className="h-4 w-4 mr-1" /> Delete
-                        </Button>
-                      </div>
-                    </TableCell>
+            {exams.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500 mb-4">No exams available yet</p>
+                <Button onClick={handleCreateExam}>
+                  <Plus className="mr-1 h-4 w-4" /> Create Your First Exam
+                </Button>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Exam Name</TableHead>
+                    <TableHead>Abbreviation</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Questions</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {exams.map((exam) => (
+                    <TableRow key={exam.id}>
+                      <TableCell className="font-medium">{exam.name}</TableCell>
+                      <TableCell>{exam.abbreviation || exam.name?.substring(0, 4).toUpperCase()}</TableCell>
+                      <TableCell className="max-w-xs truncate">{exam.description || "No description available"}</TableCell>
+                      <TableCell>{questionCounts[exam.id] || 0}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end space-x-2">
+                          <Button variant="outline" size="sm" onClick={() => handleManageQuestions(exam)}>
+                            <FileText className="h-4 w-4 mr-1" /> Questions
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => navigate(`/admin/exams/${exam.id}/edit`)}>
+                            <Edit className="h-4 w-4 mr-1" /> Edit
+                          </Button>
+                          <Button variant="outline" size="sm" className="text-red-500 hover:text-red-700" onClick={() => handleDeleteExam(exam.id)}>
+                            <Trash2 className="h-4 w-4 mr-1" /> Delete
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </div>

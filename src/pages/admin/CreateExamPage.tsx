@@ -1,9 +1,10 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { ExamForm } from "@/components/admin/ExamForm";
 import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/services/supabase";
+import { createExam } from "@/services/supabase/exam";
 
 export default function CreateExamPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -12,30 +13,28 @@ export default function CreateExamPage() {
   const handleCreateExam = async (examData: any) => {
     setIsLoading(true);
     try {
-      // In a real application, you'd use Supabase
-      // const { data, error } = await supabase
-      //   .from('exams')
-      //   .insert([examData])
-      //   .select();
+      // Save to Supabase
+      const newExam = await createExam(examData);
       
-      // if (error) throw error;
-      
-      // Mock success for now
-      setTimeout(() => {
+      if (newExam) {
         toast({
           title: "Exam created",
-          description: `${examData.title} has been created successfully`,
+          description: `${newExam.name} has been created successfully`,
         });
-        navigate('/admin/exams');
-        setIsLoading(false);
-      }, 1000);
-      
+        navigate('/admin/exams/questions', { 
+          state: { 
+            examId: newExam.id,
+            examName: newExam.name 
+          } 
+        });
+      }
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "Failed to create exam",
         variant: "destructive",
       });
+    } finally {
       setIsLoading(false);
     }
   };

@@ -1,9 +1,16 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Card,
   CardContent,
@@ -13,6 +20,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
+import { getYears } from "@/services/supabase/exam";
 
 type ExamFormProps = {
   onSubmit: (examData: any) => void;
@@ -24,15 +32,38 @@ export function ExamForm({ onSubmit, isLoading = false, initialData }: ExamFormP
   const [title, setTitle] = useState(initialData?.title || "");
   const [abbreviation, setAbbreviation] = useState(initialData?.abbreviation || "");
   const [description, setDescription] = useState(initialData?.description || "");
+  const [yearId, setYearId] = useState(initialData?.year_id || "");
+  const [years, setYears] = useState<any[]>([]);
   const [errors, setErrors] = useState<{
     title?: string;
     abbreviation?: string;
+    yearId?: string;
   }>({});
+  
+  useEffect(() => {
+    // Fetch years for the dropdown
+    const fetchYears = async () => {
+      try {
+        const yearsData = await getYears();
+        setYears(yearsData);
+        
+        // If no year is selected and we have years, select the first one
+        if (!yearId && yearsData.length > 0) {
+          setYearId(yearsData[0].id);
+        }
+      } catch (error) {
+        console.error("Error fetching years:", error);
+      }
+    };
+    
+    fetchYears();
+  }, [yearId]);
   
   const validateForm = (): boolean => {
     const newErrors: {
       title?: string;
       abbreviation?: string;
+      yearId?: string;
     } = {};
     
     if (!title.trim()) {
@@ -45,6 +76,10 @@ export function ExamForm({ onSubmit, isLoading = false, initialData }: ExamFormP
       newErrors.abbreviation = "Abbreviation must be 10 characters or less";
     }
     
+    if (!yearId) {
+      newErrors.yearId = "Please select a year";
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -54,9 +89,10 @@ export function ExamForm({ onSubmit, isLoading = false, initialData }: ExamFormP
     
     if (validateForm()) {
       const examData = {
-        title,
+        name: title,
         abbreviation,
         description,
+        year_id: yearId,
         id: initialData?.id || undefined,
       };
       
@@ -107,6 +143,27 @@ export function ExamForm({ onSubmit, isLoading = false, initialData }: ExamFormP
               aria-invalid={errors.abbreviation ? "true" : "false"}
             />
             {errors.abbreviation && <p className="text-sm text-destructive">{errors.abbreviation}</p>}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="year">Year</Label>
+            <Select 
+              value={yearId} 
+              onValueChange={setYearId}
+              disabled={isLoading}
+            >
+              <SelectTrigger id="year" className={errors.yearId ? "border-destructive" : ""}>
+                <SelectValue placeholder="Select a year" />
+              </SelectTrigger>
+              <SelectContent>
+                {years.map((year) => (
+                  <SelectItem key={year.id} value={year.id}>
+                    {year.year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.yearId && <p className="text-sm text-destructive">{errors.yearId}</p>}
           </div>
           
           <div className="space-y-2">
