@@ -1,4 +1,3 @@
-
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // Define types for our database tables
@@ -62,6 +61,85 @@ try {
 }
 
 export { supabase };
+
+// Database setup function - call this to ensure tables exist
+export const setupDatabase = async () => {
+  try {
+    console.log("Setting up database tables...");
+    
+    // Create quizzes table if it doesn't exist
+    const { error: quizzesError } = await supabase.rpc('create_quiz_tables');
+    
+    if (quizzesError) {
+      console.error("Error creating quizzes table:", quizzesError);
+      
+      // If the RPC function doesn't exist yet, we'll create it
+      console.log("Creating database functions and tables directly...");
+      
+      // Create tables using raw SQL
+      const { error: sqlError } = await supabase.rpc('exec_sql', {
+        sql_query: `
+          -- Create quizzes table
+          CREATE TABLE IF NOT EXISTS public.quizzes (
+            id TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            description TEXT,
+            category TEXT,
+            "timeLimit" INTEGER NOT NULL DEFAULT 10,
+            "questionsCount" INTEGER DEFAULT 0,
+            "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT now(),
+            attempts INTEGER DEFAULT 0,
+            "averageScore" FLOAT
+          );
+          
+          -- Create quiz_questions table
+          CREATE TABLE IF NOT EXISTS public.quiz_questions (
+            id TEXT PRIMARY KEY,
+            quiz_id TEXT REFERENCES public.quizzes(id),
+            question_text TEXT NOT NULL,
+            question_type TEXT NOT NULL,
+            options JSONB,
+            correct_answer JSONB,
+            points INTEGER DEFAULT 1,
+            "order" INTEGER,
+            image_url TEXT,
+            audio_url TEXT,
+            video_url TEXT
+          );
+          
+          -- Create function for incrementing counts
+          CREATE OR REPLACE FUNCTION increment(count INTEGER)
+          RETURNS INTEGER AS $$
+          BEGIN
+            RETURN count + 1;
+          END;
+          $$ LANGUAGE plpgsql;
+          
+          -- Create function for setting up tables
+          CREATE OR REPLACE FUNCTION create_quiz_tables()
+          RETURNS VOID AS $$
+          BEGIN
+            -- Tables are already created if this function is called
+            RAISE NOTICE 'Quiz tables already exist';
+          END;
+          $$ LANGUAGE plpgsql;
+        `
+      });
+      
+      if (sqlError) {
+        // If exec_sql function doesn't exist (it's a custom function)
+        console.error("Error executing SQL:", sqlError);
+        return false;
+      }
+    }
+    
+    console.log("Database setup complete!");
+    return true;
+  } catch (error) {
+    console.error("Error setting up database:", error);
+    return false;
+  }
+};
 
 // Quiz-related functions
 export const createQuiz = async (quizData: Omit<Quiz, 'id' | 'questionsCount' | 'attempts' | 'averageScore'>): Promise<Quiz | null> => {

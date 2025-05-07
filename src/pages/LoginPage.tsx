@@ -1,20 +1,22 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/services/supabaseClient";
+import { supabase, setupDatabase } from "@/services/supabaseClient";
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [supabaseConnected, setSupabaseConnected] = useState(false);
+  const [databaseReady, setDatabaseReady] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Test Supabase connection
-    const checkSupabaseConnection = async () => {
+    // Test Supabase connection and setup database
+    const initializeSupabase = async () => {
       try {
-        // Use our existing supabase client to test connection
+        // First check if we can connect to Supabase
         const { error } = await supabase.from('quizzes').select('id').limit(1);
         
         if (!error) {
@@ -24,6 +26,32 @@ export default function LoginPage() {
             title: "Supabase Connected",
             description: "Your application is successfully connected to Supabase!",
           });
+          
+          // Tables already exist, no need to set them up
+          setDatabaseReady(true);
+        } else if (error.code === "42P01") {
+          // Tables don't exist yet, but connection works
+          setSupabaseConnected(true);
+          toast({
+            title: "Supabase Connected",
+            description: "Setting up database tables...",
+          });
+          
+          // Set up the database tables
+          const setup = await setupDatabase();
+          if (setup) {
+            setDatabaseReady(true);
+            toast({
+              title: "Database Ready",
+              description: "Quiz tables have been created successfully!",
+            });
+          } else {
+            toast({
+              title: "Database Setup Failed",
+              description: "Could not create tables. Check console for details.",
+              variant: "destructive",
+            });
+          }
         } else {
           throw error;
         }
@@ -31,13 +59,13 @@ export default function LoginPage() {
         console.error("Error connecting to Supabase:", error);
         toast({
           title: "Supabase Connection Failed",
-          description: "Please set up your Supabase environment variables: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY",
+          description: "Please check your Supabase credentials and try again.",
           variant: "destructive",
         });
       }
     };
 
-    checkSupabaseConnection();
+    initializeSupabase();
   }, []);
 
   const handleLogin = (email: string, password: string) => {
@@ -94,6 +122,11 @@ export default function LoginPage() {
               {supabaseConnected && (
                 <div className="mt-2 p-2 bg-green-100 dark:bg-green-900 rounded-md text-sm text-green-800 dark:text-green-200">
                   ✓ Supabase connection confirmed
+                </div>
+              )}
+              {databaseReady && (
+                <div className="mt-2 p-2 bg-green-100 dark:bg-green-900 rounded-md text-sm text-green-800 dark:text-green-200">
+                  ✓ Database tables ready
                 </div>
               )}
             </div>
