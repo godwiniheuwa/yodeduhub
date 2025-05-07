@@ -28,11 +28,11 @@ export interface QuizQuestion {
   video_url?: string;
 }
 
-// Initialize Supabase client with fallback values for development
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project-url.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-public-anon-key';
+// Initialize Supabase client with provided values
+const supabaseUrl = 'https://evbznrkdjwzmhbokxtjd.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2Ynpucmtkand6bWhib2t4dGpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY2NTUxMDIsImV4cCI6MjA2MjIzMTEwMn0.ESnOCWrRkeNxei-ASUCjr5x1rrL4gog_uHHAxM9rerk';
 
-// Create a mock client if we're in development without proper env vars
+// Create a client with error handling
 let supabase: SupabaseClient;
 
 try {
