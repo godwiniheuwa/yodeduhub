@@ -6,6 +6,7 @@ import { SignupForm } from "@/components/auth/SignupForm";
 import { toast } from "@/hooks/use-toast";
 import { signUp } from "@/services/supabase/user";
 import { setupExamTables } from "@/services/supabase/setupTables";
+import { User } from "@/services/supabase/types"; // Import the User type
 
 export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -18,8 +19,13 @@ export default function SignupPage() {
       // Ensure tables exist first
       await setupExamTables();
       
-      // Use the signUp function from user.ts
-      const userData = await signUp(email, password, { name, role });
+      // Cast the role to the correct type
+      const userRole = (role === "admin" || role === "student" || role === "teacher") 
+        ? role as User["role"]  // Cast to the union type if valid
+        : "student"; // Default to student if input doesn't match expected values
+      
+      // Use the signUp function from user.ts with properly typed role
+      const userData = await signUp(email, password, { name, role: userRole });
       
       if (userData) {
         // Save user to localStorage for frontend session management
@@ -36,7 +42,7 @@ export default function SignupPage() {
         });
         
         // Redirect based on role
-        if (role === "admin") {
+        if (userRole === "admin") {
           navigate("/admin");
         } else {
           navigate("/dashboard");
