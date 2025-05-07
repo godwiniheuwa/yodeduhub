@@ -28,11 +28,40 @@ export interface QuizQuestion {
   video_url?: string;
 }
 
-// Initialize Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Initialize Supabase client with fallback values for development
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project-url.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-public-anon-key';
 
-export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+// Create a mock client if we're in development without proper env vars
+let supabase: SupabaseClient;
+
+try {
+  supabase = createClient(supabaseUrl, supabaseAnonKey);
+  console.log("Supabase client initialized");
+} catch (error) {
+  console.error("Failed to initialize Supabase client:", error);
+  
+  // Create a mock client with dummy methods to prevent app crashes
+  supabase = {
+    from: () => ({
+      insert: () => ({ 
+        select: () => ({ single: () => Promise.resolve({ data: null, error: new Error("Not connected to Supabase") }) }) 
+      }),
+      update: () => Promise.resolve({ data: null, error: new Error("Not connected to Supabase") }),
+      select: () => Promise.resolve({ data: [], error: null }),
+      eq: () => ({ order: () => Promise.resolve({ data: [], error: null }) })
+    }),
+    storage: {
+      from: () => ({
+        upload: () => Promise.resolve({ data: null, error: new Error("Not connected to Supabase") }),
+        getPublicUrl: () => ({ data: { publicUrl: '' } })
+      })
+    },
+    rpc: () => Promise.resolve()
+  } as unknown as SupabaseClient;
+}
+
+export { supabase };
 
 // Quiz-related functions
 export const createQuiz = async (quizData: Omit<Quiz, 'id' | 'questionsCount' | 'attempts' | 'averageScore'>): Promise<Quiz | null> => {

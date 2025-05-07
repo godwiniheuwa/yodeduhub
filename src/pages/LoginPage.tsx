@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { toast } from "@/hooks/use-toast";
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from "@/services/supabaseClient";
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -15,26 +14,24 @@ export default function LoginPage() {
     // Test Supabase connection
     const checkSupabaseConnection = async () => {
       try {
-        // This will throw an error if Supabase is not properly connected
-        const supabase = createClient(
-          import.meta.env.VITE_SUPABASE_URL,
-          import.meta.env.VITE_SUPABASE_ANON_KEY
-        );
+        // Use our existing supabase client to test connection
+        const { error } = await supabase.from('quizzes').select('id').limit(1);
         
-        const { data, error } = await supabase.from('_dummy_query').select('*').limit(1);
-        
-        // If we get here without error, connection is successful
-        console.log("Supabase connection successful!");
-        setSupabaseConnected(true);
-        toast({
-          title: "Supabase Connected",
-          description: "Your application is successfully connected to Supabase!",
-        });
+        if (!error) {
+          console.log("Supabase connection successful!");
+          setSupabaseConnected(true);
+          toast({
+            title: "Supabase Connected",
+            description: "Your application is successfully connected to Supabase!",
+          });
+        } else {
+          throw error;
+        }
       } catch (error) {
         console.error("Error connecting to Supabase:", error);
         toast({
           title: "Supabase Connection Failed",
-          description: "Please check your Supabase configuration.",
+          description: "Please set up your Supabase environment variables: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY",
           variant: "destructive",
         });
       }
