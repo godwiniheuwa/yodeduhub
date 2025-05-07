@@ -54,3 +54,22 @@ export const addYear = async (year: number) => {
     throw error;
   }
 };
+
+export const deleteYear = async (id: string) => {
+  try {
+    const { error } = await supabase
+      .from('years')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error deleting year:', error);
+      throw error;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error in deleteYear:', error);
+    throw error;
+  }
+};

@@ -4,48 +4,93 @@ import { supabase } from './client';
 // Setup tables if they don't exist
 export const setupExamTables = async () => {
   try {
-    // Check if years table exists
-    const { error: yearsCheckError } = await supabase.rpc('check_table_exists', {
-      table_name: 'years'
-    });
-
-    // If there's an error, we need to create the table
-    if (yearsCheckError) {
-      console.log('Creating years table...');
-      await supabase.rpc('create_years_table');
+    // Create years table
+    const { error: yearsError } = await supabase.rpc('create_years_table').maybeSingle();
+    if (yearsError) {
+      console.error('Error creating years table with RPC:', yearsError);
+      
+      // Try direct SQL as a fallback
+      const { error: directYearsError } = await supabase.from('years').select('count()').limit(1);
+      
+      if (directYearsError && directYearsError.code === '42P01') {
+        // Table doesn't exist, try to create it directly
+        const { error } = await supabase.query(`
+          CREATE TABLE IF NOT EXISTS years (
+            id TEXT PRIMARY KEY,
+            year INT NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+          );
+        `);
+        
+        if (error) {
+          console.error('Error creating years table directly:', error);
+        } else {
+          console.log('Years table created successfully via direct SQL');
+        }
+      }
     }
 
-    // Check if subjects table exists
-    const { error: subjectsCheckError } = await supabase.rpc('check_table_exists', {
-      table_name: 'subjects'
-    });
-
-    // If there's an error, we need to create the table
-    if (subjectsCheckError) {
-      console.log('Creating subjects table...');
-      await supabase.rpc('create_subjects_table');
+    // Create subjects table (with same fallback pattern)
+    const { error: subjectsError } = await supabase.rpc('create_subjects_table').maybeSingle();
+    if (subjectsError) {
+      const { error: directSubjectsError } = await supabase.from('subjects').select('count()').limit(1);
+      
+      if (directSubjectsError && directSubjectsError.code === '42P01') {
+        const { error } = await supabase.query(`
+          CREATE TABLE IF NOT EXISTS subjects (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            code TEXT,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+          );
+        `);
+        
+        if (!error) console.log('Subjects table created successfully via direct SQL');
+      }
     }
 
-    // Check if exams table exists
-    const { error: examsCheckError } = await supabase.rpc('check_table_exists', {
-      table_name: 'exams'
-    });
-
-    // If there's an error, we need to create the table
-    if (examsCheckError) {
-      console.log('Creating exams table...');
-      await supabase.rpc('create_exams_table');
+    // Create exams table (with same fallback pattern)
+    const { error: examsError } = await supabase.rpc('create_exams_table').maybeSingle();
+    if (examsError) {
+      const { error: directExamsError } = await supabase.from('exams').select('count()').limit(1);
+      
+      if (directExamsError && directExamsError.code === '42P01') {
+        const { error } = await supabase.query(`
+          CREATE TABLE IF NOT EXISTS exams (
+            id TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            year_id TEXT REFERENCES years(id),
+            subject_id TEXT REFERENCES subjects(id),
+            duration INT,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+          );
+        `);
+        
+        if (!error) console.log('Exams table created successfully via direct SQL');
+      }
     }
 
-    // Check if questions table exists
-    const { error: questionsCheckError } = await supabase.rpc('check_table_exists', {
-      table_name: 'questions'
-    });
-
-    // If there's an error, we need to create the table
-    if (questionsCheckError) {
-      console.log('Creating questions table...');
-      await supabase.rpc('create_questions_table');
+    // Create questions table (with same fallback pattern)
+    const { error: questionsError } = await supabase.rpc('create_questions_table').maybeSingle();
+    if (questionsError) {
+      const { error: directQuestionsError } = await supabase.from('questions').select('count()').limit(1);
+      
+      if (directQuestionsError && directQuestionsError.code === '42P01') {
+        const { error } = await supabase.query(`
+          CREATE TABLE IF NOT EXISTS questions (
+            id TEXT PRIMARY KEY,
+            exam_id TEXT REFERENCES exams(id),
+            question_text TEXT NOT NULL,
+            question_type TEXT NOT NULL,
+            options JSONB,
+            correct_answer TEXT,
+            marks INT DEFAULT 1,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+          );
+        `);
+        
+        if (!error) console.log('Questions table created successfully via direct SQL');
+      }
     }
 
     return true;

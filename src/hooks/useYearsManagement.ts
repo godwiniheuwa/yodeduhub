@@ -2,7 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "@/hooks/use-toast";
-import { getYears, setupExamTables } from '@/services/supabase/exam';
+import { getYears, deleteYear } from '@/services/supabase/exam';
+import { setupExamTables } from '@/services/supabase/setupTables';
 
 export function useYearsManagement() {
   const [years, setYears] = useState<any[]>([]);
@@ -82,12 +83,13 @@ export function useYearsManagement() {
     setDeleteDialogOpen(true);
   };
 
-  const handleDeleteYear = () => {
+  const handleDeleteYear = async () => {
     if (!yearToDelete) return;
     
     try {
-      // For now, just remove from UI
-      // In a real app, you'd delete from the database first
+      await deleteYear(yearToDelete);
+      
+      // Update local state after successful deletion
       setYears(years.filter(year => year.id !== yearToDelete));
       
       toast({
