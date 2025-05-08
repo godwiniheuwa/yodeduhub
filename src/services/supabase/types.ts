@@ -83,6 +83,7 @@ export interface Attempt {
 export interface User {
   id: string;
   name: string;
+  username: string;
   email: string;
   role: 'student' | 'admin' | 'teacher';
   avatar_url?: string;

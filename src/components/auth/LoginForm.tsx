@@ -8,22 +8,20 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from "@/hooks/use-toast";
 
 type LoginFormProps = {
-  onLogin: (email: string, password: string) => void;
+  onLogin: (identifier: string, password: string) => void;
   isLoading?: boolean;
 };
 
 export function LoginForm({ onLogin, isLoading = false }: LoginFormProps) {
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState<{email?: string; password?: string}>({});
+  const [errors, setErrors] = useState<{identifier?: string; password?: string}>({});
 
   const validateForm = (): boolean => {
-    const newErrors: {email?: string; password?: string} = {};
+    const newErrors: {identifier?: string; password?: string} = {};
     
-    if (!email) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = "Email is invalid";
+    if (!identifier) {
+      newErrors.identifier = "Username or email is required";
     }
     
     if (!password) {
@@ -38,7 +36,7 @@ export function LoginForm({ onLogin, isLoading = false }: LoginFormProps) {
     e.preventDefault();
     
     if (validateForm()) {
-      onLogin(email, password);
+      onLogin(identifier, password);
     } else {
       toast({
         title: "Error",
@@ -59,17 +57,17 @@ export function LoginForm({ onLogin, isLoading = false }: LoginFormProps) {
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="identifier">Username or Email</Label>
             <Input
-              id="email"
-              type="email"
-              placeholder="your.email@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="identifier"
+              type="text"
+              placeholder="username or email@example.com"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
               disabled={isLoading}
-              aria-invalid={errors.email ? "true" : "false"}
+              aria-invalid={errors.identifier ? "true" : "false"}
             />
-            {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+            {errors.identifier && <p className="text-sm text-destructive">{errors.identifier}</p>}
           </div>
           
           <div className="space-y-2">

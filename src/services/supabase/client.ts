@@ -1,4 +1,3 @@
-
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // Initialize Supabase client with provided values
@@ -20,6 +19,27 @@ try {
     } catch (err) {
       // If function doesn't exist, warn in console
       console.log('Note: check_table_exists function might need to be created manually');
+    }
+
+    try {
+      // Function to create users table with username field
+      await supabase.rpc('create_users_table_with_username_function');
+    } catch (err) {
+      console.log('Note: create_users_table_with_username function might need to be created manually');
+    }
+
+    try {
+      // Function to check if a column exists in a table
+      await supabase.rpc('create_check_column_exists_function');
+    } catch (err) {
+      console.log('Note: check_column_exists function might need to be created manually');
+    }
+
+    try {
+      // Function to add username column to users table
+      await supabase.rpc('create_add_username_column_function');
+    } catch (err) {
+      console.log('Note: add_username_column function might need to be created manually');
     }
 
     try {

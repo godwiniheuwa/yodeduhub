@@ -10,7 +10,7 @@ export function useSignupHandler() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSignup = async (name: string, email: string, password: string, role: string) => {
+  const handleSignup = async (name: string, email: string, password: string, role: string, username: string) => {
     setIsLoading(true);
     
     try {
@@ -28,7 +28,11 @@ export function useSignupHandler() {
       console.log(`Creating new user: ${email} with role: ${userRole}`);
       
       // Use the signUp function from user.ts with properly typed role
-      const userData = await signUp(email, password, { name, role: userRole });
+      const userData = await signUp(email, password, { 
+        name, 
+        role: userRole,
+        username 
+      });
       
       if (userData) {
         console.log('User created successfully:', userData);
@@ -37,6 +41,7 @@ export function useSignupHandler() {
         localStorage.setItem("user", JSON.stringify({
           id: userData.id,
           name: userData.name,
+          username: userData.username,
           email: userData.email,
           role: userData.role
         }));

@@ -9,14 +9,14 @@ export function useLoginHandler() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   
-  const handleLogin = async (email: string, password: string) => {
+  const handleLogin = async (identifier: string, password: string) => {
     setIsLoading(true);
     
     try {
-      console.log('Attempting login for:', email);
+      console.log('Attempting login for:', identifier);
       
       // Use the signIn function from user.ts
-      const { user } = await signIn(email, password);
+      const { user } = await signIn(identifier, password);
       
       if (!user) {
         throw new Error("Authentication failed");
@@ -25,7 +25,7 @@ export function useLoginHandler() {
       // Get user's role from database
       const { data: userData, error: userError } = await supabase
         .from('users')
-        .select('id, name, email, role')
+        .select('id, name, username, email, role')
         .eq('id', user.id)
         .single();
       
@@ -49,10 +49,11 @@ export function useLoginHandler() {
       console.error("Login error:", error);
       
       // For demo purposes, allow mock credentials to still work
-      if (email === "student@example.com" && password === "password") {
+      if ((identifier === "student@example.com" || identifier === "student") && password === "password") {
         const mockUser = {
           id: "student-demo",
           name: "Demo Student",
+          username: "student",
           email: "student@example.com",
           role: "student"
         };
@@ -63,10 +64,11 @@ export function useLoginHandler() {
           description: "Welcome back, Student! (Demo account)",
         });
         navigate("/dashboard");
-      } else if (email === "admin@example.com" && password === "password") {
+      } else if ((identifier === "admin@example.com" || identifier === "admin") && password === "password") {
         const mockAdmin = {
           id: "admin-demo",
           name: "Demo Admin",
+          username: "admin",
           email: "admin@example.com",
           role: "admin"
         };
@@ -80,7 +82,7 @@ export function useLoginHandler() {
       } else {
         toast({
           title: "Login failed",
-          description: error.message || "Invalid email or password",
+          description: error.message || "Invalid username/email or password",
           variant: "destructive",
         });
       }

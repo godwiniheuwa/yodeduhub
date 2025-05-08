@@ -16,11 +16,28 @@ export const setupExamTables = async () => {
         console.log('Creating users table...');
         
         // We need to create the table via SQL since it doesn't exist
-        const { error: createError } = await supabase.rpc('create_users_table');
+        const { error: createError } = await supabase.rpc('create_users_table_with_username');
         
         if (createError) {
           console.error('Error creating users table:', createError);
-          return false;
+          
+          // Try the original function if the new one doesn't exist
+          const { error: fallbackError } = await supabase.rpc('create_users_table');
+          
+          if (fallbackError) {
+            console.error('Error creating users table (fallback):', fallbackError);
+            return false;
+          }
+          
+          // If fallback succeeded, we need to add username column
+          try {
+            const { error: alterError } = await supabase.rpc('add_username_column');
+            if (alterError) {
+              console.error('Error adding username column:', alterError);
+            }
+          } catch (e) {
+            console.error('Error in adding username column:', e);
+          }
         }
         
         console.log('Users table created successfully');
@@ -30,6 +47,29 @@ export const setupExamTables = async () => {
         return false;
       } else {
         console.log('Users table already exists');
+        
+        // Check if we need to add the username column to an existing table
+        try {
+          const { error: checkColumnError } = await supabase.rpc('check_column_exists', { 
+            p_table_name: 'users',
+            p_column_name: 'username'
+          });
+          
+          if (checkColumnError) {
+            // If the function doesn't exist or failed, try to add the column directly
+            try {
+              const { error: alterError } = await supabase.rpc('add_username_column');
+              if (alterError) {
+                console.error('Error adding username column:', alterError);
+              }
+            } catch (e) {
+              console.error('Error in adding username column:', e);
+            }
+          }
+        } catch (e) {
+          console.error('Error checking username column:', e);
+        }
+        
         return true;
       }
     };

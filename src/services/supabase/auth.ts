@@ -14,6 +14,7 @@ export const signUp = async (email: string, password: string, userDetails: Parti
       options: {
         data: {
           name: userDetails.name,
+          username: userDetails.username || email.split('@')[0], // Use first part of email as default username
           role: userDetails.role || 'student'
         }
       }
@@ -37,7 +38,8 @@ export const signUp = async (email: string, password: string, userDetails: Parti
       .insert([
         { 
           id: authData.user.id,
-          name: userDetails.name, 
+          name: userDetails.name,
+          username: userDetails.username || email.split('@')[0], // Use first part of email as default username 
           email,
           role: userDetails.role || 'student',
           created_at: new Date().toISOString(),
@@ -74,14 +76,42 @@ export const signUp = async (email: string, password: string, userDetails: Parti
   }
 };
 
-export const signIn = async (email: string, password: string) => {
+export const signIn = async (identifier: string, password: string) => {
   try {
-    console.log('Attempting sign in for:', email);
+    console.log('Attempting sign in for identifier:', identifier);
     
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    // Check if the identifier is an email address
+    const isEmail = /\S+@\S+\.\S+/.test(identifier);
+    
+    let authResponse;
+    
+    if (isEmail) {
+      // Sign in with email
+      authResponse = await supabase.auth.signInWithPassword({
+        email: identifier,
+        password,
+      });
+    } else {
+      // For username login, we need to first find the user's email
+      const { data: userData, error: userLookupError } = await supabase
+        .from('users')
+        .select('email')
+        .eq('username', identifier)
+        .single();
+      
+      if (userLookupError || !userData) {
+        console.error('Username lookup error or user not found:', userLookupError);
+        throw new Error('Invalid username or password');
+      }
+      
+      // Sign in with email retrieved from username lookup
+      authResponse = await supabase.auth.signInWithPassword({
+        email: userData.email,
+        password,
+      });
+    }
+    
+    const { data, error } = authResponse;
     
     if (error) {
       console.error('Sign in error:', error);
