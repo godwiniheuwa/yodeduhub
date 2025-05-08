@@ -7,11 +7,12 @@ export const signUp = async (email: string, password: string, userDetails: Parti
   try {
     console.log('Starting signup process for:', email);
     
-    // Create the user with Supabase auth
+    // Create the user with Supabase auth, enabling email confirmation
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
+        emailRedirectTo: window.location.origin + '/login',
         data: {
           name: userDetails.name,
           username: userDetails.username || email.split('@')[0], // Use first part of email as default username

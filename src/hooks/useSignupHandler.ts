@@ -37,26 +37,17 @@ export function useSignupHandler() {
       if (userData) {
         console.log('User created successfully:', userData);
         
-        // Save user to localStorage for frontend session management
-        localStorage.setItem("user", JSON.stringify({
-          id: userData.id,
-          name: userData.name,
-          username: userData.username,
-          email: userData.email,
-          role: userData.role
-        }));
-        
+        // Success message about email verification
         toast({
           title: "Account created",
-          description: `Welcome to YODEDUHUB, ${name}!`,
+          description: "Please check your email to activate your account.",
         });
         
-        // Redirect based on role
-        if (userRole === "admin") {
-          navigate("/admin");
-        } else {
-          navigate("/dashboard");
-        }
+        // Store a message in session storage for the login page
+        sessionStorage.setItem("signupSuccess", "true");
+        
+        // Redirect to login page
+        navigate("/login");
       }
     } catch (error: any) {
       console.error('Signup error:', error);
