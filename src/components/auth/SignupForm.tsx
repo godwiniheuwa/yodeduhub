@@ -50,8 +50,8 @@ export function SignupForm({ onSignup, isLoading = false }: SignupFormProps) {
 
     if (!email) {
       newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = "Email is invalid";
+    } else if (!/^\S+@\S+\.\S+$/.test(email)) {
+      newErrors.email = "Email is invalid. Please use a valid format (e.g., name@example.com)";
     }
 
     if (!password) {

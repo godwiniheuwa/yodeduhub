@@ -1,49 +1,69 @@
 
-import { supabase } from './client';
-import { 
-  createUsersTable, 
-  createPreferencesTable, 
-  createProgressTable 
-} from './tableSetup/userTables';
-import { 
-  createYearsTable, 
-  createSubjectsTable, 
-  createExamsTable, 
-  createQuestionsTable 
-} from './tableSetup/examTables';
-import { isDatabaseReady } from './tableSetup/dbStatus';
+import { createUsersTable, createPreferencesTable, createProgressTable } from './tableSetup/userTables';
+import { createYearsTable, createSubjectsTable, createExamsTable, createQuestionsTable } from './tableSetup/examTables';
+import { getDbStatus } from './tableSetup/dbStatus';
 
-// Setup tables if they don't exist
+// Main function to set up exam tables and necessary structures
 export const setupExamTables = async () => {
   try {
-    console.log('Setting up database tables...');
+    // Try to create user-related tables
+    try {
+      await createUsersTable();
+    } catch (error) {
+      console.log('Users table may already exist or creation failed:', error);
+    }
     
-    // Check and create all tables
-    const usersCreated = await createUsersTable();
-    const prefsCreated = await createPreferencesTable();
-    const progressCreated = await createProgressTable();
-    const yearsCreated = await createYearsTable();
-    const subjectsCreated = await createSubjectsTable();
-    const examsCreated = await createExamsTable();
-    const questionsCreated = await createQuestionsTable();
+    try {
+      await createPreferencesTable();
+    } catch (error) {
+      console.log('Preferences table may already exist or creation failed:', error);
+    }
     
-    // Log setup results
+    try {
+      await createProgressTable();
+    } catch (error) {
+      console.log('Progress table may already exist or creation failed:', error);
+    }
+    
+    // Try to create exam-related tables
+    try {
+      await createYearsTable();
+    } catch (error) {
+      console.log('Years table may already exist or creation failed:', error);
+    }
+    
+    try {
+      await createSubjectsTable();
+    } catch (error) {
+      console.log('Subjects table may already exist or creation failed:', error);
+    }
+    
+    try {
+      await createExamsTable();
+    } catch (error) {
+      console.log('Exams table may already exist or creation failed:', error);
+    }
+    
+    try {
+      await createQuestionsTable();
+    } catch (error) {
+      console.log('Questions table may already exist or creation failed:', error);
+    }
+
+    // Check database status after setup attempts
+    const status = await getDbStatus();
     console.log('Database setup complete:');
-    console.log('- Users table:', usersCreated ? 'OK' : 'Failed');
-    console.log('- Preferences table:', prefsCreated ? 'OK' : 'Failed');
-    console.log('- Progress table:', progressCreated ? 'OK' : 'Failed');
-    console.log('- Years table:', yearsCreated ? 'OK' : 'Failed');
-    console.log('- Subjects table:', subjectsCreated ? 'OK' : 'Failed');
-    console.log('- Exams table:', examsCreated ? 'OK' : 'Failed');
-    console.log('- Questions table:', questionsCreated ? 'OK' : 'Failed');
+    console.log(`- Users table: ${status.usersTableExists ? 'Exists' : 'Failed'}`);
+    console.log(`- Preferences table: ${status.preferencesTableExists ? 'Exists' : 'Failed'}`);
+    console.log(`- Progress table: ${status.progressTableExists ? 'Exists' : 'Failed'}`);
+    console.log(`- Years table: ${status.yearsTableExists ? 'Exists' : 'Failed'}`);
+    console.log(`- Subjects table: ${status.subjectsTableExists ? 'Exists' : 'Failed'}`);
+    console.log(`- Exams table: ${status.examsTableExists ? 'Exists' : 'Failed'}`);
+    console.log(`- Questions table: ${status.questionsTableExists ? 'Exists' : 'Failed'}`);
     
-    // Return success if all critical tables are created
-    return usersCreated && prefsCreated && progressCreated;
+    return status;
   } catch (error) {
-    console.error('Error setting up database tables:', error);
-    return false;
+    console.error('Error setting up exam tables:', error);
+    throw error;
   }
 };
-
-// Re-export the database status check function
-export { isDatabaseReady };
