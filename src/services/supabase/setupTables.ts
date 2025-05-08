@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 
 // Setup tables if they don't exist
@@ -244,6 +243,45 @@ export const isDatabaseReady = async () => {
     return true; // Database appears to be ready
   } catch (error) {
     console.error('Error checking database readiness:', error);
+    return false;
+  }
+};
+
+// Clear all data from the database tables
+export const clearDatabaseData = async () => {
+  try {
+    console.log('Starting database cleanup...');
+    
+    // Clear data from all tables in correct order to respect foreign key constraints
+    const tables = [
+      'user_progress',
+      'user_preferences',
+      'attempts',
+      'questions',
+      'subjects',
+      'years',
+      'exams',
+      'users'
+    ];
+    
+    for (const table of tables) {
+      console.log(`Clearing data from ${table} table...`);
+      const { error } = await supabase
+        .from(table)
+        .delete()
+        .neq('id', 'preserve-nothing'); // This will delete all rows
+      
+      if (error && error.code !== '42P01') { // Ignore error if table doesn't exist
+        console.error(`Error clearing ${table} table:`, error);
+      } else {
+        console.log(`Successfully cleared ${table} table`);
+      }
+    }
+    
+    console.log('Database cleanup complete!');
+    return true;
+  } catch (error) {
+    console.error('Error during database cleanup:', error);
     return false;
   }
 };
