@@ -4,103 +4,246 @@ import { supabase } from './client';
 // Setup tables if they don't exist
 export const setupExamTables = async () => {
   try {
-    // Instead of relying on RPC functions that don't exist, create tables directly with SQL
+    console.log('Setting up database tables...');
+    
+    // Create users table first
+    const createUsersTable = async () => {
+      const { data, error } = await supabase
+        .from('users')
+        .select('id')
+        .limit(1);
+      
+      if (error && error.code === '42P01') {  // Table doesn't exist
+        console.log('Creating users table...');
+        
+        // We need to create the table via SQL since it doesn't exist
+        const { error: createError } = await supabase.rpc('create_users_table');
+        
+        if (createError) {
+          console.error('Error creating users table:', createError);
+          return false;
+        }
+        
+        console.log('Users table created successfully');
+        return true;
+      } else if (error) {
+        console.error('Error checking users table:', error);
+        return false;
+      } else {
+        console.log('Users table already exists');
+        return true;
+      }
+    };
+    
+    // Create user_preferences table
+    const createPreferencesTable = async () => {
+      const { data, error } = await supabase
+        .from('user_preferences')
+        .select('user_id')
+        .limit(1);
+      
+      if (error && error.code === '42P01') {  // Table doesn't exist
+        console.log('Creating user_preferences table...');
+        
+        // We need to create the table via SQL since it doesn't exist
+        const { error: createError } = await supabase.rpc('create_preferences_table');
+        
+        if (createError) {
+          console.error('Error creating user_preferences table:', createError);
+          return false;
+        }
+        
+        console.log('User_preferences table created successfully');
+        return true;
+      } else if (error) {
+        console.error('Error checking user_preferences table:', error);
+        return false;
+      } else {
+        console.log('User_preferences table already exists');
+        return true;
+      }
+    };
+    
+    // Create user_progress table
+    const createProgressTable = async () => {
+      const { data, error } = await supabase
+        .from('user_progress')
+        .select('user_id')
+        .limit(1);
+      
+      if (error && error.code === '42P01') {  // Table doesn't exist
+        console.log('Creating user_progress table...');
+        
+        // We need to create the table via SQL since it doesn't exist
+        const { error: createError } = await supabase.rpc('create_progress_table');
+        
+        if (createError) {
+          console.error('Error creating user_progress table:', createError);
+          return false;
+        }
+        
+        console.log('User_progress table created successfully');
+        return true;
+      } else if (error) {
+        console.error('Error checking user_progress table:', error);
+        return false;
+      } else {
+        console.log('User_progress table already exists');
+        return true;
+      }
+    };
+    
     // Create years table
-    const { error: yearsError } = await supabase.rpc('execute_sql', {
-      sql: `
-        CREATE TABLE IF NOT EXISTS years (
-          id TEXT PRIMARY KEY,
-          year INT NOT NULL,
-          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        );`
-    });
+    const createYearsTable = async () => {
+      const { data, error } = await supabase
+        .from('years')
+        .select('id')
+        .limit(1);
+      
+      if (error && error.code === '42P01') {
+        console.log('Creating years table...');
+        const { error: createError } = await supabase.rpc('create_years_table');
+        
+        if (createError) {
+          console.error('Error creating years table:', createError);
+          return false;
+        }
+        
+        console.log('Years table created successfully');
+        return true;
+      } else if (error) {
+        console.error('Error checking years table:', error);
+        return false;
+      } else {
+        console.log('Years table already exists');
+        return true;
+      }
+    };
     
-    if (yearsError) {
-      console.error('Error creating years table:', yearsError);
-    } else {
-      console.log('Years table created or already exists');
-    }
-
     // Create subjects table
-    const { error: subjectsError } = await supabase.rpc('execute_sql', {
-      sql: `
-        CREATE TABLE IF NOT EXISTS subjects (
-          id TEXT PRIMARY KEY,
-          name TEXT NOT NULL,
-          code TEXT,
-          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        );`
-    });
+    const createSubjectsTable = async () => {
+      const { data, error } = await supabase
+        .from('subjects')
+        .select('id')
+        .limit(1);
+      
+      if (error && error.code === '42P01') {
+        console.log('Creating subjects table...');
+        const { error: createError } = await supabase.rpc('create_subjects_table');
+        
+        if (createError) {
+          console.error('Error creating subjects table:', createError);
+          return false;
+        }
+        
+        console.log('Subjects table created successfully');
+        return true;
+      } else if (error) {
+        console.error('Error checking subjects table:', error);
+        return false;
+      } else {
+        console.log('Subjects table already exists');
+        return true;
+      }
+    };
     
-    if (subjectsError) {
-      console.error('Error creating subjects table:', subjectsError);
-    } else {
-      console.log('Subjects table created or already exists');
-    }
-
     // Create exams table
-    const { error: examsError } = await supabase.rpc('execute_sql', {
-      sql: `
-        CREATE TABLE IF NOT EXISTS exams (
-          id TEXT PRIMARY KEY,
-          title TEXT NOT NULL,
-          year_id TEXT REFERENCES years(id),
-          subject_id TEXT REFERENCES subjects(id),
-          duration INT,
-          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        );`
-    });
+    const createExamsTable = async () => {
+      const { data, error } = await supabase
+        .from('exams')
+        .select('id')
+        .limit(1);
+      
+      if (error && error.code === '42P01') {
+        console.log('Creating exams table...');
+        const { error: createError } = await supabase.rpc('create_exams_table');
+        
+        if (createError) {
+          console.error('Error creating exams table:', createError);
+          return false;
+        }
+        
+        console.log('Exams table created successfully');
+        return true;
+      } else if (error) {
+        console.error('Error checking exams table:', error);
+        return false;
+      } else {
+        console.log('Exams table already exists');
+        return true;
+      }
+    };
     
-    if (examsError) {
-      console.error('Error creating exams table:', examsError);
-    } else {
-      console.log('Exams table created or already exists');
-    }
-
     // Create questions table
-    const { error: questionsError } = await supabase.rpc('execute_sql', {
-      sql: `
-        CREATE TABLE IF NOT EXISTS questions (
-          id TEXT PRIMARY KEY,
-          exam_id TEXT REFERENCES exams(id),
-          question_text TEXT NOT NULL,
-          question_type TEXT NOT NULL,
-          options JSONB,
-          correct_answer TEXT,
-          marks INT DEFAULT 1,
-          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        );`
-    });
+    const createQuestionsTable = async () => {
+      const { data, error } = await supabase
+        .from('questions')
+        .select('id')
+        .limit(1);
+      
+      if (error && error.code === '42P01') {
+        console.log('Creating questions table...');
+        const { error: createError } = await supabase.rpc('create_questions_table');
+        
+        if (createError) {
+          console.error('Error creating questions table:', createError);
+          return false;
+        }
+        
+        console.log('Questions table created successfully');
+        return true;
+      } else if (error) {
+        console.error('Error checking questions table:', error);
+        return false;
+      } else {
+        console.log('Questions table already exists');
+        return true;
+      }
+    };
     
-    if (questionsError) {
-      console.error('Error creating questions table:', questionsError);
-    } else {
-      console.log('Questions table created or already exists');
-    }
-
-    // Also create users table if it doesn't exist
-    const { error: usersError } = await supabase.rpc('execute_sql', {
-      sql: `
-        CREATE TABLE IF NOT EXISTS users (
-          id TEXT PRIMARY KEY,
-          name TEXT NOT NULL,
-          email TEXT UNIQUE NOT NULL,
-          role TEXT DEFAULT 'student',
-          last_login TIMESTAMPTZ,
-          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        );`
-    });
+    // Check and create all tables
+    const usersCreated = await createUsersTable();
+    const prefsCreated = await createPreferencesTable();
+    const progressCreated = await createProgressTable();
+    const yearsCreated = await createYearsTable();
+    const subjectsCreated = await createSubjectsTable();
+    const examsCreated = await createExamsTable();
+    const questionsCreated = await createQuestionsTable();
     
-    if (usersError) {
-      console.error('Error creating users table:', usersError);
-    } else {
-      console.log('Users table created or already exists');
-    }
-
-    return true;
+    // Log setup results
+    console.log('Database setup complete:');
+    console.log('- Users table:', usersCreated ? 'OK' : 'Failed');
+    console.log('- Preferences table:', prefsCreated ? 'OK' : 'Failed');
+    console.log('- Progress table:', progressCreated ? 'OK' : 'Failed');
+    console.log('- Years table:', yearsCreated ? 'OK' : 'Failed');
+    console.log('- Subjects table:', subjectsCreated ? 'OK' : 'Failed');
+    console.log('- Exams table:', examsCreated ? 'OK' : 'Failed');
+    console.log('- Questions table:', questionsCreated ? 'OK' : 'Failed');
+    
+    // Return success if all critical tables are created
+    return usersCreated && prefsCreated && progressCreated;
   } catch (error) {
-    console.error('Error setting up exam tables:', error);
+    console.error('Error setting up database tables:', error);
+    return false;
+  }
+};
+
+// Function to check if database is ready with all required tables
+export const isDatabaseReady = async () => {
+  try {
+    // Check if users table exists and has records
+    const { data: users, error: usersError } = await supabase
+      .from('users')
+      .select('id')
+      .limit(1);
+    
+    if (usersError && usersError.code === '42P01') {
+      return false; // Table doesn't exist
+    }
+    
+    return true; // Database appears to be ready
+  } catch (error) {
+    console.error('Error checking database readiness:', error);
     return false;
   }
 };

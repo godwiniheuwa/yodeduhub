@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
@@ -5,7 +6,7 @@ import { SignupForm } from "@/components/auth/SignupForm";
 import { toast } from "@/hooks/use-toast";
 import { signUp } from "@/services/supabase/user";
 import { setupExamTables } from "@/services/supabase/setupTables";
-import { User } from "@/services/supabase/types"; // Import the User type
+import { User } from "@/services/supabase/types"; 
 
 export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -15,7 +16,10 @@ export default function SignupPage() {
     setIsLoading(true);
     
     try {
+      console.log('Starting signup process...');
+      
       // Ensure tables exist first
+      console.log('Setting up database tables...');
       await setupExamTables();
       
       // Cast the role to the correct type
@@ -23,10 +27,14 @@ export default function SignupPage() {
         ? role as User["role"]  // Cast to the union type if valid
         : "student"; // Default to student if input doesn't match expected values
       
+      console.log(`Creating new user: ${email} with role: ${userRole}`);
+      
       // Use the signUp function from user.ts with properly typed role
       const userData = await signUp(email, password, { name, role: userRole });
       
       if (userData) {
+        console.log('User created successfully:', userData);
+        
         // Save user to localStorage for frontend session management
         localStorage.setItem("user", JSON.stringify({
           id: userData.id,
@@ -48,6 +56,8 @@ export default function SignupPage() {
         }
       }
     } catch (error: any) {
+      console.error('Signup error:', error);
+      
       toast({
         title: "Signup failed",
         description: error.message || "An error occurred during signup",

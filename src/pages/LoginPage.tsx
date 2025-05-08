@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/services/supabase/client";
-import { setupExamTables } from "@/services/supabase/setupTables";
+import { setupExamTables, isDatabaseReady } from "@/services/supabase/setupTables";
 import { signIn } from "@/services/supabase/user";
 
 export default function LoginPage() {
@@ -17,49 +18,60 @@ export default function LoginPage() {
     // Test Supabase connection and setup database
     const initializeSupabase = async () => {
       try {
-        // Always run setup on app start - it will create tables if they don't exist
         setIsLoading(true);
         
         // First check if we can connect to Supabase
-        const { error } = await supabase.from('users').select('id').limit(1);
+        console.log("Checking Supabase connection...");
+        const { error: connectionError } = await supabase.auth.getSession();
         
-        if (!error) {
-          console.log("Supabase connection successful and tables exist!");
+        if (!connectionError) {
+          console.log("Supabase connection successful!");
           setSupabaseConnected(true);
           toast({
             title: "Supabase Connected",
             description: "Your application is successfully connected to Supabase!",
           });
           
-          // Tables already exist
-          setDatabaseReady(true);
-        } else if (error.code === "42P01") {
-          // Tables don't exist yet, but connection works
-          setSupabaseConnected(true);
-          toast({
-            title: "Supabase Connected",
-            description: "Setting up database tables...",
-          });
+          // Check if database is ready
+          const dbReady = await isDatabaseReady();
           
-          // Set up the database tables
-          const setup = await setupExamTables();
-          if (setup) {
+          if (dbReady) {
+            console.log("Database already set up!");
             setDatabaseReady(true);
-            toast({
-              title: "Database Ready",
-              description: "Tables have been created successfully!",
-              duration: 5000,
-            });
           } else {
+            console.log("Database needs setup...");
             toast({
-              title: "Database Setup Failed",
-              description: "Could not create tables. Please check console for details.",
-              variant: "destructive",
-              duration: 5000,
+              title: "Setting Up Database",
+              description: "Creating necessary tables for the application...",
             });
+            
+            // Set up the database tables
+            const setup = await setupExamTables();
+            
+            if (setup) {
+              setDatabaseReady(true);
+              toast({
+                title: "Database Ready",
+                description: "Tables have been created successfully!",
+                duration: 5000,
+              });
+            } else {
+              toast({
+                title: "Database Setup Failed",
+                description: "Could not create all required tables. See console for details.",
+                variant: "destructive",
+                duration: 5000,
+              });
+            }
           }
         } else {
-          throw error;
+          console.error("Supabase connection error:", connectionError);
+          toast({
+            title: "Supabase Connection Failed",
+            description: "Please check your Supabase credentials or internet connection.",
+            variant: "destructive",
+            duration: 5000,
+          });
         }
       } catch (error) {
         console.error("Error connecting to Supabase:", error);
@@ -81,10 +93,12 @@ export default function LoginPage() {
     setIsLoading(true);
     
     try {
-      // Use the signIn function from user.ts
-      const data = await signIn(email, password);
+      console.log('Attempting login for:', email);
       
-      if (!data || !data.user) {
+      // Use the signIn function from user.ts
+      const { user } = await signIn(email, password);
+      
+      if (!user) {
         throw new Error("Authentication failed");
       }
       
@@ -92,7 +106,7 @@ export default function LoginPage() {
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('id, name, email, role')
-        .eq('id', data.user.id)
+        .eq('id', user.id)
         .single();
       
       if (userError) throw userError;
