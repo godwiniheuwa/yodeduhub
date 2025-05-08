@@ -1,7 +1,6 @@
-
 import { createUsersTable, createPreferencesTable, createProgressTable } from './tableSetup/userTables';
 import { createYearsTable, createSubjectsTable, createExamsTable, createQuestionsTable } from './tableSetup/examTables';
-import { getDbStatus } from './tableSetup/dbStatus';
+import { getDbStatus, isDatabaseReady } from './tableSetup/dbStatus';
 
 // Main function to set up exam tables and necessary structures
 export const setupExamTables = async () => {
@@ -67,3 +66,6 @@ export const setupExamTables = async () => {
     throw error;
   }
 };
+
+// Export isDatabaseReady function from dbStatus
+export { isDatabaseReady } from './tableSetup/dbStatus';
