@@ -1,72 +1,11 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { SignupForm } from "@/components/auth/SignupForm";
-import { toast } from "@/hooks/use-toast";
-import { signUp } from "@/services/supabase/user";
-import { setupExamTables } from "@/services/supabase/setupTables";
-import { User } from "@/services/supabase/types"; 
+import { SignupInfo } from "@/components/auth/SignupInfo";
+import { useSignupHandler } from "@/hooks/useSignupHandler";
 
 export default function SignupPage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
-
-  const handleSignup = async (name: string, email: string, password: string, role: string) => {
-    setIsLoading(true);
-    
-    try {
-      console.log('Starting signup process...');
-      
-      // Ensure tables exist first
-      console.log('Setting up database tables...');
-      await setupExamTables();
-      
-      // Cast the role to the correct type
-      const userRole = (role === "admin" || role === "student" || role === "teacher") 
-        ? role as User["role"]  // Cast to the union type if valid
-        : "student"; // Default to student if input doesn't match expected values
-      
-      console.log(`Creating new user: ${email} with role: ${userRole}`);
-      
-      // Use the signUp function from user.ts with properly typed role
-      const userData = await signUp(email, password, { name, role: userRole });
-      
-      if (userData) {
-        console.log('User created successfully:', userData);
-        
-        // Save user to localStorage for frontend session management
-        localStorage.setItem("user", JSON.stringify({
-          id: userData.id,
-          name: userData.name,
-          email: userData.email,
-          role: userData.role
-        }));
-        
-        toast({
-          title: "Account created",
-          description: `Welcome to YODEDUHUB, ${name}!`,
-        });
-        
-        // Redirect based on role
-        if (userRole === "admin") {
-          navigate("/admin");
-        } else {
-          navigate("/dashboard");
-        }
-      }
-    } catch (error: any) {
-      console.error('Signup error:', error);
-      
-      toast({
-        title: "Signup failed",
-        description: error.message || "An error occurred during signup",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { handleSignup, isLoading } = useSignupHandler();
 
   return (
     <Layout>
@@ -82,26 +21,7 @@ export default function SignupPage() {
             <SignupForm onSignup={handleSignup} isLoading={isLoading} />
           </div>
           
-          <div className="hidden md:block w-full md:w-1/2">
-            <div className="rounded-lg overflow-hidden">
-              <img 
-                src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=800&q=80" 
-                alt="Person using laptop" 
-                className="w-full h-auto object-cover"
-              />
-            </div>
-            
-            <div className="mt-8 bg-quiz-light dark:bg-gray-800 rounded-lg p-6">
-              <h3 className="text-xl font-semibold mb-2">Why Join YODEDUHUB?</h3>
-              <ul className="space-y-2 list-disc list-inside text-gray-700 dark:text-gray-300">
-                <li>Access thousands of quizzes across various subjects</li>
-                <li>Track your learning progress over time</li>
-                <li>Prepare for exams with timed assessments</li>
-                <li>Create custom quizzes as an administrator</li>
-                <li>Get detailed feedback on your performance</li>
-              </ul>
-            </div>
-          </div>
+          <SignupInfo />
         </div>
       </div>
     </Layout>
